@@ -95,10 +95,6 @@ define(['N/search', 'N/url', 'N/runtime', 'N/file'],
                     context.response.write(returnXML);
 
                 }
-                else if(invoiceType == 'Projects'){
-                    let returnXML = "&nbsp;";
-                    context.response.write({output: returnXML});
-                }
                 else{
                     let returnXML = "&nbsp;";
                     let attachmentText = "";

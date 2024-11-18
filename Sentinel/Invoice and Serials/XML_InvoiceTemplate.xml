@@ -162,6 +162,8 @@
 </style>
 </head>
 <body header="nlheader" header-height="10%" footer="nlfooter" footer-height="45pt" background-macro="nlWatermark" padding="0.5in 0.3in 0.5in 0.3in" size="Letter">
+ <#assign serialNumbers = {}>
+  <#include "https://7493949-sb1.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=3391&deploy=1&compid=7493949_SB1&ns-at=AAEJ7tMQZPj3mTFO8wWhnB6pFH09KhdKmd9GIcHF2ovqeMfN1W4&invoice=${record.id}" />
    <table class="headertable" border="1" style="margin-top:10px;width:100%;">
      <tr>
 	   <td style="line-height: 150%"><b>${record.billaddress@label}</b></td>
@@ -251,14 +253,14 @@
       </#list>
       
       <!-- Append the grouped data to the final list -->
-      <#assign finalItems = finalItems + [{"item": item.item, "description": tempDescription?join("<br />"), "quantity": tempQuantity, "rate": item.rate, "amount": tempAmount, "custcol_sti_line_trans_invoice_group": item.custcol_sti_line_trans_invoice_group, "shipaddress": item.shipaddress, "custcol_sti_do_not_print": item.custcol_sti_do_not_print, "suppress": item.custcol_suppress_on_inv_print, "startdate": item.custcol_ns_service_start, "enddate": item.custcol_ns_service_end}]>
+      <#assign finalItems = finalItems + [{"item": item.item, "description": tempDescription?join("<br />"), "quantity": tempQuantity, "rate": item.rate, "amount": tempAmount, "custcol_sti_line_trans_invoice_group": item.custcol_sti_line_trans_invoice_group, "shipaddress": item.shipaddress, "custcol_sti_do_not_print": item.custcol_sti_do_not_print, "suppress": item.custcol_suppress_on_inv_print, "startdate": item.custcol_ns_service_start, "enddate": item.custcol_ns_service_end, "solineid": item.custcol_ctc_so_line_id}]>
         
       <!-- Mark this key as processed -->
       <#assign processedKeys = processedKeys + [groupKey]>
 
   </#if>
          <#else>
-            <#assign finalItems = finalItems + [{"item": item.item, "description": item.description, "quantity": item.quantity, "rate": item.rate, "amount": item.amount, "custcol_sti_line_trans_invoice_group": item.custcol_sti_line_trans_invoice_group,  "shipaddress": item.shipaddress, "custcol_sti_do_not_print": item.custcol_sti_do_not_print,  "suppress": item.custcol_suppress_on_inv_print, "startdate": item.custcol_ns_service_start, "enddate": item.custcol_ns_service_end}]>
+            <#assign finalItems = finalItems + [{"item": item.item, "description": item.description, "quantity": item.quantity, "rate": item.rate, "amount": item.amount, "custcol_sti_line_trans_invoice_group": item.custcol_sti_line_trans_invoice_group,  "shipaddress": item.shipaddress, "custcol_sti_do_not_print": item.custcol_sti_do_not_print,  "suppress": item.custcol_suppress_on_inv_print, "startdate": item.custcol_ns_service_start, "enddate": item.custcol_ns_service_end, "solineid": item.custcol_ctc_so_line_id}]>
     </#if>
 </#list>
 
@@ -324,9 +326,11 @@
                 <#if record.custbody_sti_invoice_type == 'SuiteBilling'> <#assign itemName = ""></#if>
                 <#if item.suppress == true> <#assign itemName = ""> </#if>
                 <#if record.custbody_sti_suppress_part_on_invoice == true> <#assign itemName = ""></#if>
+                  
                 <#if item.custcol_sti_line_trans_invoice_group?has_content && record.custbody_sti_expand_invoice_groups_inv == false> ${item.custcol_sti_line_trans_invoice_group} 
-                <#elseif item.custcol_sti_line_trans_invoice_group?has_content && record.custbody_sti_expand_invoice_groups_inv == true> <#if item.startdate?has_content && item.enddate?has_content> ${item.startdate} - ${item.enddate} <br /></#if>${item.description} 
-                <#else>${itemName} <#if item.startdate?has_content && item.enddate?has_content> ${item.startdate} - ${item.enddate} <br /></#if>${item.description}
+                <#elseif item.custcol_sti_line_trans_invoice_group?has_content && record.custbody_sti_expand_invoice_groups_inv == true> <#if item.startdate?has_content && item.enddate?has_content> ${item.startdate} - ${item.enddate} <br /></#if>${item.description}  <#if serialNumbers["line-"+item.solineid]?has_content && record.custbody_suppress_serials == false><br />  Serial Number(s): <br /> ${serialNumbers["line-"+item.solineid].serial}</#if>
+                <#else>${itemName} <#if item.startdate?has_content && item.enddate?has_content > ${item.startdate} - ${item.enddate} <br /></#if>${item.description} 
+                       <#if serialNumbers["line-"+item.solineid]?has_content && record..custbody_suppress_serials == false> <br /> Serial Number(s): <br /> ${serialNumbers["line-"+item.solineid].serial}</#if>
                 </#if>
              </td>
              <td colspan="3"><#if (record.custbody_sti_expand_invoice_groups_inv == true) || (item.custcol_sti_line_trans_invoice_group == "" && record.custbody_sti_expand_invoice_groups_inv == false)><#if item.shipaddress != ""> ${getAddressUpToState(item.shipaddress)} <#else>${record.shipaddr1} <br/> ${record.shipcity}<#if record.shipstate != "">, ${record.shipstate} </#if></#if></#if></td>
@@ -362,8 +366,8 @@
                           <#if item.suppress == true> <#assign itemName = ""> </#if>
                           <#if record.custbody_sti_suppress_part_on_invoice == true> <#assign itemName = ""></#if>
                           <#if item.custcol_sti_line_trans_invoice_group?has_content && record.custbody_sti_expand_invoice_groups_inv == false> ${item.custcol_sti_line_trans_invoice_group} 
-                          <#elseif item.custcol_sti_line_trans_invoice_group?has_content && record.custbody_sti_expand_invoice_groups_inv == true> ${item.custcol_sti_line_trans_invoice_group} <br />  <#if item.startdate?has_content && item.enddate?has_content> ${item.startdate} - ${item.enddate} <br /></#if>${item.description} 
-                          <#else>${itemName}  <#if item.startdate?has_content && item.enddate?has_content> ${item.startdate} - ${item.enddate} <br /></#if> ${item.description}
+                          <#elseif item.custcol_sti_line_trans_invoice_group?has_content && record.custbody_sti_expand_invoice_groups_inv == true> ${item.custcol_sti_line_trans_invoice_group} <br />  <#if item.startdate?has_content && item.enddate?has_content> ${item.startdate} - ${item.enddate} <br /></#if>${item.description}  <#if serialNumbers["line-"+item.solineid]?has_content && record.custbody_suppress_serials == false> <br />Serial Number(s): <br /> ${serialNumbers["line-"+item.solineid].serial}</#if>
+                          <#else>${itemName}  <#if item.startdate?has_content && item.enddate?has_content> ${item.startdate} - ${item.enddate} <br /></#if> ${item.description}  <#if serialNumbers["line-"+item.solineid]?has_content && record.custbody_suppress_serials == false><br /> Serial Number(s): <br /> ${serialNumbers["line-"+item.solineid].serial}</#if>
                           </#if>  
                        </td>
                        <td colspan="3"><#if (record.custbody_sti_expand_invoice_groups_inv == true) || (item.custcol_sti_line_trans_invoice_group == "" && record.custbody_sti_expand_invoice_groups_inv == false)><#if item.shipaddress != ""> ${getAddressUpToState(item.shipaddress)} <#else>${record.shipaddr1} <br/> ${record.shipcity}<#if record.shipstate != "">, ${record.shipstate} </#if></#if></#if></td>
@@ -419,6 +423,6 @@
 </body>
 </pdf>
   <#assign invoicetype = '' >
-  <#if record.custbody_sti_invoice_type == 'Service Tickets'> <#assign invoicetype = 'service' /> <#elseif record.custbody_sti_invoice_type == 'SuiteBilling'> <#assign invoicetype = 'suitebilling' /> </#if>
- <#include "https://7493949.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=3178&deploy=1&compid=7493949&ns-at=AAEJ7tMQLiZuPl0D4P0PuSAbM8uahn_f1itxJPiG7Q7v26PT0vE&type=${invoicetype}&invoice=${record.id}" />
+  <#if record.custbody_sti_invoice_type == 'Service Tickets'> <#assign invoicetype = 'service' /> <#elseif record.custbody_sti_invoice_type == 'SuiteBilling'> <#assign invoicetype = 'suitebilling' />  <#else> <#assign invoicetype = record.custbody_sti_invoice_type?replace(" ", "-") /> </#if>
+ <#include "https://7493949-sb1.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=3178&deploy=1&compid=7493949_SB1&ns-at=AAEJ7tMQj5o_I_HgSd9zXP47am7uyiNj6-JPDZAVfKlzYfcu62Q&type=${invoicetype}&invoice=${record.id}" />
 </pdfset>
