@@ -1,0 +1,556 @@
+<?xml version="1.0"?><!DOCTYPE pdf PUBLIC "-//big.faceless.org//report" "report-1.1.dtd">
+<pdf>
+<head>
+<link name="NotoSans" type="font" subtype="truetype" src="${nsfont.NotoSans_Regular}" src-bold="${nsfont.NotoSans_Bold}" src-italic="${nsfont.NotoSans_Italic}" src-bolditalic="${nsfont.NotoSans_BoldItalic}" bytes="2" />
+<macrolist>
+    <macro id="nlheader">
+        <table style="width: 100%; border: none;">
+            <tr>
+                <td style="border:none;">
+                    <img src="https://735043.app.netsuite.com/core/media/media.nl?id=6284597&amp;c=735043&amp;h=58f151407bbb407f24c2" style="height:25px;width:250px;"/>
+                </td>
+                <td style="border:none; vertical-align:middle;">
+                    <p align="center" style="font-weight:bold;font-size:8px;">
+                        CANADA CUSTOMS INVOICE
+                        <br/>
+                        FACTURE DES DOUANES CANADIENNES
+                    </p>
+                </td>
+                <td style="border:none; vertical-align:middle;">
+                    <table style="width: 100%;">
+                        <tr>
+                            <td style="background-color:black;">
+                                <p align="right" style="color: white;text-align:right;font-weight:bold;font-size:8px;">
+                                    PROTECTED
+                                    <br/>
+                                    PROTÉGÉ
+                                </p>
+                            </td>
+                            <td style="background-color:black;">
+                                <p align="center" style="color: white;font-weight:bold;font-size:16px;">
+                                    B
+                                </p>
+                            </td>
+                            <td style="background-color:black;">
+                                <p align="left" style="color: white;font-weight:bold;font-size:8px;">
+                                    when completed
+                                    <br/>
+                                    une fois rempli
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </macro>
+</macrolist>
+<style>*{
+        font-family: NotoSans, sans-serif;
+    }
+
+    table {
+        border-collapse: collapse;
+    }
+
+    table, th, td{
+        border: 0.5px solid black;
+    }
+
+    p {
+        margin: 0;
+        font-size: 6.0pt;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    p.val{
+        font-family: courier, monospace;
+        font-weight: bold;
+        font-size:15px;
+        vertical-align:middle;
+    }
+
+    .colLeft{
+        width: 50%;
+    }
+
+    .colRight{
+        width: 50%;
+    }
+
+    .nextTables{
+        border-top: none;
+    }
+
+</style>
+</head>
+<body header="nlheader" header-height="3%" footer="nlfooter" footer-height="20pt" padding="0.25in 0.25in 0.25in 0.25in" size="Letter">
+    <#if record.item?has_content>
+        <!-- VALUES -->
+        <#assign totalBeforeAllowances = 0 />
+        <#list record.item as item>
+            <#if item.custcol_nsacs_itemparent == "Z">
+                <#assign totalBeforeAllowances = totalBeforeAllowances + item.amount />
+            </#if>
+        </#list>
+
+        <#assign hasRecord = false />
+        <#assign ctr = 0 />
+        <#assign parent_data = [] />
+
+        <#list record.item as item>
+            <#if item.custcol_nsacs_itemparent == "Z">
+                <#assign hasRecord = true />
+                <#assign sub_data = [{ "11" : item.quantity, "12" : item.description, "13" : item.quantity, "14" : item.rate?string?replace("$",""), "15" : item.amount, "12b" : item.custcol_hscode}] />
+                <#assign parent_data = parent_data + sub_data />
+                <#assign ctr = ctr + 1 />
+            </#if>
+
+            <#if (ctr == 5 || item?is_last) && hasRecord == true >
+                <table style="width:100%;border:none;">
+                    <tr>
+                        <td rowspan ="2" class ="colLeft">
+                            <p>
+                                1. Vendor (name and address) - Vendeur (nom et adresse)
+                            </p>
+                            <div style="width:100%;height:90px;background-color:#deebff;margin:0.5px 0.5px 0.5px 0.5px;">
+                                <p class="val">
+                                    Premier Nutrition Company, LLC
+                                    <br/>
+                                    1222 67th Street, Suite 210
+                                    <br/>
+                                    Emeryville, CA 94608
+                                    <br/>
+                                    United States
+                                </p>
+                            </div>
+                        </td>
+                        <td colspan ="2" class ="colRight">
+                            <p>
+                                2. Date of direct shipment to Canada - Date d'expédition directe vers le Canada
+                            </p>
+                            <div align="center" style="width:100%;height:30px;background-color:#deebff;"><p align="center" class="val">${record.custbody_rad_date}</p></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan ="2" class ="colRight">
+                            <p>
+                                3. Other references (include purchaser's order No.)
+                                <br/>
+                                Autres références (inclure le n° de commande de l'acheteur)
+                            </p>
+                            <div align="center" style="width:100%;height:30px;background-color:#deebff;"><p align="center" class="val">${record.otherrefnum}</p></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td rowspan ="3" class ="colLeft">
+                            <p>
+                                4. Consignee (name and address) - Destinataire (nom et adresse)
+                            </p>
+                            <div style="width:100%;height:150px;background-color:#deebff;margin:0.5px 0.5px 0.5px 0.5px;">
+                                <p class="val">
+                                    ${record.shipaddress}
+                                </p>
+                            </div>
+                        </td>
+                        <td colspan ="2" class ="colRight">
+                            <p>
+                                5. Purchaser's name and address (if other than consignee)
+                                <br/>
+                                Nom et adresse de l'acheteur (s'il diffère du destinataire)
+                            </p>
+                            <div align="center" style="width:100%;height:40px;background-color:#deebff;">
+                                <p class="val" style="font-size:10px;">
+                                    Thomas Large and Singer Inc Post US
+                                    <br/>
+                                    15 Allstate PKWY Ste 500
+                                    <br/>
+                                    Markham ON L3R 5B4 CANADA
+                                    <br/>
+                                    SBRN 889951893RM0001
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan ="2" class ="colRight">
+                            <p>
+                                6. Country of transhipment - Pays de transbordement
+                            </p>
+                            <div align="center" style="width:100%;height:25px;"><p align="center" class="val"></p></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width:25%;">
+                        <p>
+                            7. Country of origin of goods
+                            <br/>
+                            Pays d'origine des marchandises
+                        </p>
+                        <div align="center" style="width:100%;height:15px;background-color:#deebff;"><p align="center" class="val">USA</p></div>
+                        </td>
+                        <td style="width:25%;">
+                            <div style="width:100%">
+                                <p style="font-size:5px;font-weight:bold;padding: 5px 5px 5px 5px;">
+                                    IF SHIPMENT INCLUDES GOODS OF DIFFERENT ORIGINS
+                                    ENTER ORIGINS AGAINST ITEMS IN 12.
+                                    <br/>
+                                    SI L'EXPÉDITION COMPREND DES MARCHANDISES D'ORIGINES
+                                    DIFFÉRENTES, PRÉCISEZ LEUR PROVENANCE EN 12.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td rowspan ="2" class ="colLeft">
+                            <p>
+                                8. Transportation: Give mode and place of direct shipment to Canada
+                                <br/>
+                                Transport : Précisez mode et point d'expédition directe vers le Canada
+                            </p>
+                            <div style="width:100%;height:80px;background-color:#deebff;margin:0.5px 0.5px 0.5px 0.5px;"><p align="center" class="val">${record.shipmethod}</p></div>
+                        </td>
+                        <td colspan ="2" class ="colRight">
+                            <p>
+                                9. Conditions of sale and terms of payment
+                                <br/>
+                                (i.e. sale, consignment shipment, leased goods, etc.)
+                                <br/>
+                                Conditions de vente et modalités de paiement
+                                <br/>
+                                (p. ex. vente, expédition en consignation, location de marchandises, etc.)
+                            </p>
+                            <div align="center" style="width:100%;height:25px;background-color:#deebff;"><p align="center" class="val">Sale FOB Net 90</p></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan ="2" class ="colRight"> 
+                            <p>
+                                10. Currency of settlement - Devises du paiement
+                            </p>
+
+                            <#assign curr = record.currency />
+                            <#if record.currency == "USA" >
+                                <#assign curr = "US Dollars" />
+                            </#if>
+                            <div align="center" style="width:100%;height:25px;background-color:#deebff;"><p align="center" class="val">${curr}</p></div>
+                        </td>
+                    </tr>
+                </table>
+                <table style="width:100%;border:none;">
+                    <tr>
+                        <td rowspan="2" class="nextTables">
+                            <p>
+                                11.
+                                <br/>
+                            </p>
+                            <p align="center">
+                                Number of packages
+                                <br/>
+                                Nombre de colis
+                            </p>
+                        </td>
+                        <td rowspan="2" class="nextTables">
+                            <p>
+                                12. Specification of commodities (kind of packages, marks and numbers, general
+                                <br/>
+                                description and characteristics, i.e., grade, quality)
+                                <br/>
+                                Désignation des articles (nature des colis, marques et numéros, description générale
+                                <br/>
+                                et caractéristiques, p. ex. classe, qualité)
+                            </p>
+                        </td>
+                        <td rowspan="2" class="nextTables">
+                            <p align="center">
+                                13. Quantity
+                                <br/>
+                                (state unit)
+                                <br/>
+                                Quantité
+                                <br/>
+                                (précisez l'unité)
+                            </p>
+                        </td>
+                        <td colspan ="2" class="nextTables">
+                            <p align="center">
+                                Selling price - Prix de vente
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <p align="center">
+                                14. Unit price
+                                <br/>
+                                Prix unitaire
+                            </p>
+                        </td>
+                        <td>
+                            <p align="center">
+                                15.Total
+                            </p>
+                        </td>
+                    </tr>
+                    <#assign inner_total = 0 />
+                    <#list 0..parent_data?size-1 as i >
+                        <tr>
+                            <td style="border:none;border-left:0.5px solid black;border-right:0.5px solid black"><p class="val" style="font-size:8px;" align="center">${parent_data[i]["11"]}</p></td>
+                            <td style="border:none;border-left:0.5px solid black;border-right:0.5px solid black"><p class="val" style="font-size:8px;">${parent_data[i]["12b"]} ${parent_data[i]["12"]}</p></td>
+                            <td style="border:none;border-left:0.5px solid black;border-right:0.5px solid black"><p class="val" style="font-size:8px;" align="center">${parent_data[i]["13"]}</p></td>
+                            <td style="border:none;border-left:0.5px solid black;border-right:0.5px solid black"><p class="val" style="font-size:8px;" align="center">${parent_data[i]["14"]}</p></td>
+                            <td style="border:none;border-left:0.5px solid black;border-right:0.5px solid black"><p class="val" style="font-size:8px;" align="center">${parent_data[i]["15"]?string?replace("$","")}</p></td>
+                        </tr>
+                        <#assign inner_total = inner_total + parent_data[i]["15"] />
+                    </#list>
+                    <!-- END VALUES -->
+                    <tr>
+                        <td rowspan="2" colspan="2">
+                            <table style="border:none;width:100%;">
+                                <tr>
+                                    <td style="border:none;">
+                                        <p>    
+                                            18. If any of fields 1 to 17 are included on an attached commercial invoice, check this box
+                                        </p>
+                                        <p>
+                                            Si tout renseignement relativement aux zones 1 à 17 figure sur une ou des factures
+                                        </p>
+                                        <p>
+                                            commerciales ci-attachées, cochez cette case
+                                        </p>
+                                        <p style="float:left;width:190px;">
+                                            Commercial Invoice No. - N° de la facture commerciale
+                                        </p>
+                                        <img src="https://735043.app.netsuite.com/core/media/media.nl?id=6284598&amp;c=735043&amp;h=75c7f789a004bd87853b" style="float:none;"/>
+                                    </td>
+                                    <td style="border:none;" align="right">
+                                        <span style="font-size:30px;">
+                                            &#9633;
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td colspan="2">
+                            <p>
+                                16. Total weight - Poids total
+                            </p>
+                        </td>
+                        <td rowspan="2">
+                            <p>
+                                17. Invoice total
+                                Total de la facture
+                            </p>
+                            <div align="center" style="width:130px;height:45px;background-color:#deebff;"><p align="center" class="val">${totalBeforeAllowances?string[",##0.00"]?replace("$","")}</p></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <p>
+                                Net
+                            </p>
+                        </td>
+                        <td>
+                            <p>
+                                Gross - Brut
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            
+                <table style="width:100%;border:none;">
+                    <tr>
+                        <td class="nextTables colLeft">
+                            <p>
+                                19.Exporter's name and address (if other than vendor)
+                                <br/>
+                                Nom et adresse de l'exportateur (s'il diffère du vendeur)
+                            </p>
+                            <div align="center" style="width:100%;height:70px;background-color:#deebff;">
+                                <p class="val" style="font-size:12px;">
+                                    ODW
+                                    <br/>
+                                    1580 William Rd. Building DC1
+                                    <br/>
+                                    Columbus, OH 43207
+                                </p>
+                            </div>
+                        </td>
+                        <td class="nextTables colRight">
+                            <p>
+                                20. Originator (name and address) - Expéditeur d'origine (nom et adresse)
+                            </p>
+                            <div align="center" style="width:100%;height:80px;background-color:#deebff;">
+                                <p class="val">
+                                    Premier Nutrition Company, LLC
+                                    <br/>
+                                    1222 67th Street, Suite 210
+                                    <br/>
+                                    Emeryville, CA 94608
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="colLeft">
+                            <p>
+                                21. Agency ruling (if applicable) - Décision de l'Agence (s'il y a lieu)
+                            </p>
+                            <div align="center" style="width:100%;height:25px;"><p align="center" class="val"></p></div>
+                        </td>
+                        <td class="colRight">
+                            <table style="border:none;width:100%;">
+                                <tr>
+                                    <td style="border:none;width:75%;">
+                                        <p>    
+                                            22. If fields 23 to 25 are not applicable, check this box
+                                            <br/>
+                                            Si les zones 23 à 25 sont sans objet, cochez cette case
+                                        </p>
+                                    </td>
+                            
+                                    <td style="border:none;width:25%;">
+                                        <img src="https://735043.app.netsuite.com/core/media/media.nl?id=6284599&amp;c=735043&amp;h=e6fd67ebc6b582abc163" style="width:15px;height:15px;"/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            
+                <table style="width:100%;border:none;">
+                    <tr>
+                        <td class="nextTables" style="width:32%;">
+                            <p>
+                                23. If included in field 17 indicate amount:
+                                <br/>
+                                Si compris dans le total à la zone 17, précisez :
+                                <br/>
+                                <br/>
+                            </p>
+                            <div align="center" style="margin:auto;width:80%;height:175px;">
+                                <p align="left" style="vertical-align:middle;">
+                                (i) Transportation charges, expenses and insurance
+                                from the place of direct shipment to Canada
+                                <br/>
+                                Les frais de transport, dépenses et assurances
+                                à partir du point d'expédition directe vers le Canada
+                                <br/><br/>
+                                _________________________________________
+                                <br/>
+                                <br/>
+                                (ii) Costs for construction, erection and assembly
+                                incurred after importation into Canada
+                                <br/>
+                                Les coûts de construction, d'érection et
+                                d'assemblage après importation au Canada
+                                <br/><br/>
+                                _________________________________________
+                                <br/>
+                                <br/>
+                                (iii) Export packing
+                                <br/>
+                                Le coût de l'emballage d'exportation
+                                <br/><br/>
+                                _________________________________________
+                                <br/>
+                                </p>
+                            </div>
+                        </td>
+                        <td class="nextTables" style="width:32%;">
+                            <p>
+                                24. If not included in field 17 indicate amount:
+                                <br/>
+                                Si non compris dans le total à la zone 17, précisez:
+                                <br/>
+                                <br/>
+                            </p>
+            
+                            <div align="center" style="margin:auto;width:80%;height:175px;">
+                                <p align="left" style="vertical-align:middle;">
+                                    (i) Transportation charges, expenses and insurance
+                                    to the place of direct shipment to Canada
+                                    <br/>
+                                    Les frais de transport, dépenses et assurances jusqu'au point d'expédition directe vers le Canada
+                                    <br/><br/>
+                                    _________________________________________
+                                    <br/>
+                                    <br/>
+                                    (ii) Amounts for commissions other than buying commissions
+                                    <br/>
+                                    Les commissions autres que celles versées pour l'achat
+                                    <br/><br/>
+                                    _________________________________________
+                                    <br/>
+                                    <br/>
+                                    (iii) Export packing
+                                    <br/>
+                                    Le coût de l'emballage d'exportation
+                                    <br/><br/>
+                                    _________________________________________
+                                    <br/>
+                                    </p>
+                            </div>
+                        </td>
+                        <td class="nextTables" style="width:36%;">
+                            <p>
+                                25. Check (if applicable):
+                                <br/>
+                                Cochez (s'il y a lieu) :
+                                <br/>
+                                <br/>
+                            </p>
+                            <div align="center" style="margin:auto;width:70%;height:175px;">
+                                <p align="left" style="vertical-align:middle;">
+                                    (i) Royalty payments or subsequent proceeds are
+                                    paid or payable by the purchaser
+                                    <br/>
+                                    Des redevances ou produits ont été ou seront
+                                    versés par l'acheteur
+                                    <br/>
+                                </p>
+            
+                                <div align="center"><span style="font-size:30px;">&#9633;</span></div>
+            
+                                <p align="left">
+                                    <br/>
+                                    <br/>
+                                    (ii) The purchaser has supplied goods or services
+                                    for use in the production of these goods
+                                    <br/>
+                                    L'acheteur a fourni des marchandises ou des
+                                    services pour la production de ces
+                                    marchandises
+                                    <br/>
+                                </p>
+                                <div align="center"><span style="font-size:30px;">&#9633;</span></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            <p align="center">
+                                Dans ce formulaire, toutes les expressions désignant des personnes visent à la fois les hommes et les femmes
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+
+                <#if !item?is_last>
+                    <pbr/>
+                </#if>
+                
+                <#assign ctr = 0 />
+                <#assign total = 0 />
+                <#assign parent_data = [] />
+            </#if>
+        </#list>
+
+        <#if hasRecord == false>
+            <p>A: No qualified items has been detected to initiate a TLS/CCI form. Please review the sales order or use other PDF forms.</p>
+        </#if>
+    <#else>
+        <p>B: No qualified items has been detected to initiate a TLS/CCI form. Please review the sales order or use other PDF forms.</p>
+    </#if>
+</body>
+</pdf>

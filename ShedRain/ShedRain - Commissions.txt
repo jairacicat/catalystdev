@@ -1,0 +1,41 @@
+ShedRain - Commissions
+
+- ShedRain pays sales commissions based on net sales (Amount - discount)
+- Sometimes a secondary rep  shares in the commission:
+	-- One rep that gets 15%, second rep gets 2% of the total amount (net sales).
+	ex. SO:
+		item 1 - 100
+			Rep 1 - 15% = 15 USD
+			Rep 2 - 2%	= 2 USD
+
+- We don't deduct the cost from sales.
+
+
+To do's:
+
+ - Custom Record: Plan Table
+ 	- Rep
+ 	- Department
+ 	- Commission Percentage
+ 	- Start Date
+ 	- End Date
+ 	- Customer
+ 	- Region
+ 	- 
+
+ 	- Customer and Department is blank, then it's global percentage
+
+
+
+ - Most of the customers have reps
+ - 3 customers that are different and those are tied via department
+
+
+So for the majority of customers, it doesn't matter what is sold, the cells Rep gets there in standard percentage.
+For these three customers, you have another layer, so for if you when when any Rep cells to Home Depot there is a different rate per department of stuff that is sold.
+
+Department - type of thing that is sold.
+
+- Rep could get paid 2% for Home Depot umbrellas and 3% for Cole's umbrellas. And standard 5% for everything else regardless of customer or department
+
+

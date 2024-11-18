@@ -1,0 +1,894 @@
+<?xml version="1.0"?><!DOCTYPE pdf PUBLIC "-//big.faceless.org//report" "report-1.1.dtd">
+<pdfset>
+<pdf>
+<head>
+    <link name="NotoSans" type="font" subtype="truetype" src="${nsfont.NotoSans_Regular}" src-bold="${nsfont.NotoSans_Bold}" src-italic="${nsfont.NotoSans_Italic}" src-bolditalic="${nsfont.NotoSans_BoldItalic}" bytes="2" />
+    <#if .locale == "zh_CN">
+        <link name="NotoSansCJKsc" type="font" subtype="opentype" src="${nsfont.NotoSansCJKsc_Regular}" src-bold="${nsfont.NotoSansCJKsc_Bold}" bytes="2" />
+    <#elseif .locale == "zh_TW">
+        <link name="NotoSansCJKtc" type="font" subtype="opentype" src="${nsfont.NotoSansCJKtc_Regular}" src-bold="${nsfont.NotoSansCJKtc_Bold}" bytes="2" />
+    <#elseif .locale == "ja_JP">
+        <link name="NotoSansCJKjp" type="font" subtype="opentype" src="${nsfont.NotoSansCJKjp_Regular}" src-bold="${nsfont.NotoSansCJKjp_Bold}" bytes="2" />
+    <#elseif .locale == "ko_KR">
+        <link name="NotoSansCJKkr" type="font" subtype="opentype" src="${nsfont.NotoSansCJKkr_Regular}" src-bold="${nsfont.NotoSansCJKkr_Bold}" bytes="2" />
+    <#elseif .locale == "th_TH">
+        <link name="NotoSansThai" type="font" subtype="opentype" src="${nsfont.NotoSansThai_Regular}" src-bold="${nsfont.NotoSansThai_Bold}" bytes="2" />
+    </#if>
+    <macrolist>
+        <macro id="nlheader">
+            <table class="header" style="width: 100%;">
+              <tr>
+                <td>
+                     <img src="https://1116115.app.netsuite.com/core/media/media.nl?id=359929&amp;c=1116115&amp;h=qeu1VwyE4SlJjwYqExlgbr0A3O4T-If2VOK44eKpr8KyJCJb" width="10%" height="10%" style="float: left; margin: 0px" />
+                </td>
+
+                <td align="center"> <span class="nameandaddress">&nbsp;</span></td>
+                <td>&nbsp;</td>
+                <td align="right"><span class="title">${record@title}</span>
+                </td>
+              </tr>
+            </table>
+        </macro>
+        <macro id="nlfooter">
+
+            <table class="footer" style="width: 100%; "><tr>
+              <td colspan="5" align="center">&nbsp;</td>
+              <td colspan="6" align="center" >&nbsp;</td>
+              <td colspan="1" align="right"><!--<pagenumber/> of <totalpages/>--></td>
+              </tr></table>
+        </macro>
+    </macrolist>
+    <style type="text/css">* {
+        <#if .locale == "zh_CN">
+            font-family: NotoSans, NotoSansCJKsc, sans-serif;
+        <#elseif .locale == "zh_TW">
+            font-family: NotoSans, NotoSansCJKtc, sans-serif;
+        <#elseif .locale == "ja_JP">
+            font-family: NotoSans, NotoSansCJKjp, sans-serif;
+        <#elseif .locale == "ko_KR">
+            font-family: NotoSans, NotoSansCJKkr, sans-serif;
+        <#elseif .locale == "th_TH">
+            font-family: NotoSans, NotoSansThai, sans-serif;
+        <#else>
+            font-family: NotoSans, sans-serif;
+        </#if>
+        }
+        table {
+            font-size: 9pt;
+            table-layout: fixed;
+        }
+        th {
+            font-weight: bold;
+            font-size: 8pt;
+            vertical-align: middle;
+            padding: 5px 6px 3px;
+            background-color: #e3e3e3;
+            color: #333333;
+        }
+        td {
+            padding: 4px 6px;
+        }
+        td p { align:left }
+        b {
+            font-weight: bold;
+            color: #333333;
+        }
+        table.header td {
+            padding: 0px;
+            font-size: 10pt;
+        }
+        table.footer td {
+            vertical-align: bottom;
+            padding: 1px;
+            font-size: 8pt;
+        }
+        table.itemtable th {
+            padding-bottom: 10px;
+            padding-top: 10px;
+        }
+        table.itemtable td {
+            font-size: 7pt;
+        }
+        table.body td {
+            padding-top: 2px;
+        }
+        table.total {
+            page-break-inside: avoid;
+        }
+        tr.totalrow {
+            background-color: #e3e3e3;
+            line-height: 200%;
+        }
+        td.totalboxtop {
+            font-size: 12pt;
+            background-color: #e3e3e3;
+        }
+        td.addressheader {
+            font-size: 8pt;
+            padding-top: 6px;
+            padding-bottom: 2px;
+        }
+        td.address {
+            padding-top: 0px;
+        }
+        td.totalboxmid {
+            font-size: 18pt;
+            padding-top: 30px;
+            background-color: #e3e3e3;
+        }
+        td.totalboxbot {
+            background-color: #e3e3e3;
+            font-weight: bold;
+        }
+        span.title {
+            font-size: 20pt;
+        }
+        span.number {
+            font-size: 16pt;
+        }
+        span.itemname {
+            font-weight: bold;
+            line-height: 150%;
+        }
+        span.groupname {
+            font-weight: bold;
+
+            font-size: 10pt;
+        }
+        span.nameandaddress {
+            font-size: 7pt;
+        }
+        hr {
+            width: 100%;
+            color: #d3d3d3;
+            background-color: #d3d3d3;
+            height: 1px;
+        }
+</style>
+</head>
+<body header="nlheader" header-height="8%" footer="nlfooter" footer-height="5pt" padding="0.5in 0.5in 0.5in 0.5in" size="Letter">
+  <table class="header" style="width: 100%;">
+    <tr>
+      <td style="font-size: 7pt">${record.custbody_remit_to}</td>
+      <td> &nbsp;</td>
+      <td align="right" ><b>Invoice Date</b><br />${record.trandate}</td>
+      <td align="right" ><b>Invoice #</b><br />${record.tranid}</td>
+    </tr>
+  </table>
+  <table style="width: 100%; margin-top: 15px;">
+    <tr>
+    <td class="addressheader" colspan="3"><b>${record.billaddress@label}</b></td>
+    <!--<td class="addressheader" colspan="3"><b>${record.shipaddress@label}</b></td>-->
+    <!--<td class="totalboxtop" colspan="5"><b>${record.total@label?upper_case}</b></td>-->
+    </tr>
+    <tr>
+    <td class="address" colspan="3" rowspan="2"><#if (record.custbody_ba_iv_billing_address?has_content)> ${record.custbody_ba_iv_billing_address}<#else>${record.billaddress}</#if></td>
+    <!--<td class="address" colspan="3" rowspan="2">${record.shipaddress}</td>-->
+    <!--<td align="right" class="totalboxmid" colspan="5">${record.total}</td>-->
+    </tr>
+    <tr>
+    <!--<td align="right" class="totalboxbot" colspan="5"><b>${record.duedate@label}:</b> ${record.duedate}</td>-->
+    </tr>
+  </table>
+
+  <table class="body" style="width: 100%; margin-top: 10px;">
+    <tr>
+      <th>${record.salesrep@label}</th>
+      <th>${record.job@label}</th>
+      <th>${record.otherrefnum@label}</th>
+      <th>${record.terms@label}</th>
+      <th>${record.duedate@label}</th>
+    </tr>
+    <tr>
+      <td>${record.salesrep}</td>
+      <td>${record.job}</td>
+      <td>${record.otherrefnum}</td>
+      <td>${record.terms}</td>
+      <td>${record.duedate}</td>
+    </tr>
+  </table>
+
+<#function formatGroupValue chargeGroup, groupValue>
+  <#if chargeGroup == 'Date'><#assign formattedValue = groupValue?date?string.long />
+    <#elseif chargeGroup == 'Task' /><#assign formattedValue = groupValue?switch(' ()','',chargeGroupValue?remove_ending(" (Project Task)")) />
+    <#elseif chargeGroup == 'Week' /><#assign formattedValue = groupValue?date?string.full - (chargeGroupValue?date?long + 6 * 86400000)?number_to_date?string.full />
+    <#else /><#assign formattedValue = groupValue />
+  </#if>
+  <#return formattedValue />
+</#function>
+
+<#function forceCurrency stringNumber>
+  <#if stringNumber?is_string>
+    <#assign convertedNumber = stringNumber?number />
+    <#else />
+    <#assign convertedNumber = stringNumber />
+    </#if>
+      <#if convertedNumber < 0>
+  <#assign convertedNumber = convertedNumber * -1 />
+  <#return "(" + convertedNumber?string["#,##0.00"] + ")" />
+  <#else />
+  <#return convertedNumber?string["#,##0.00"] />
+  </#if>
+</#function>
+
+<#assign showCharges = false />
+<#if
+  (record.custbody_charge_list_time?has_content && record.custbody_charge_list_time != '[]'
+  && record.custbody_charge_list_time_group != 'Hide' && record.custbody_charge_list_time_group! != '') 
+  || (record.custbody_charge_list_expense?has_content && record.custbody_charge_list_expense != '[]' 
+  && record.custbody_charge_list_expense_group != 'Hide' && record.custbody_charge_list_expense_group! != '') 
+  || (record.custbody_charge_list_fixed?has_content && record.custbody_charge_list_fixed != '[]'
+  && record.custbody_charge_list_fixed_group != 'Hide' && record.custbody_charge_list_fixed_group! != '') 
+  || (record.custbody_charge_list_milestone?has_content && record.custbody_charge_list_milestone != '[]' 
+  && record.custbody_charge_list_milestone_group != 'Hide' && record.custbody_charge_list_milestone_group! != '')
+  || (record.custbody_charge_list_progress?has_content && record.custbody_charge_list_progress != '[]'
+  &&  record.custbody_charge_list_progress_group != 'Hide' && record.custbody_charge_list_progress_group! != '')
+  || (record.custbody_charge_list_purchase?has_content && record.custbody_charge_list_purchase != '[]'
+  &&  record.custbody_charge_list_purchase_group != 'Hide' && record.custbody_charge_list_purchase_group! != '')>
+    <#assign showCharges = true />
+</#if>
+
+<#if record.custbody_charge_list_page_break! == true && showCharges == true>
+    <div style="page-break-after: always;"></div>
+</#if>
+
+<#if showCharges == true>
+    <hr />
+</#if>
+<#assign sortOrder = "Date" />
+<#assign excludeSort = ["None", "Hide", "Month", ""] />
+
+<!-- Time Based Charge Table -->
+<#if record.custbody_charge_list_time_group! != 'Hide' && record.custbody_charge_list_time_group! != ''>
+<#if record.custbody_charge_list_time?has_content && record.custbody_charge_list_time != '[]'>
+
+<!-- BA - Start -->
+<#assign customObject = record.custbody_charge_list_time?eval />
+<#assign previousItem = "" />
+<#assign qtySum = 0 />
+<#assign amtSum = 0 />
+
+
+<!--create list to check for unique columns such as Employee/Rate pairs-->
+<#assign uniqueColumns = [] />
+<#assign timeSummary = record.custbody_charge_list_time_summary_pdf?eval />
+
+<!-- BA - Table Start -->
+<table class="itemtable" style="width: 100%; margin-top: 5px;">
+  <thead>
+    <tr>
+    <th colspan="5">Date</th>
+    <#if record.custbody_charge_list_time_group != 'Item'> <#if timeSummary?seq_index_of("Item") gt -1 || !timeSummary?has_content > <th colspan="7">Item</th></#if></#if>
+    <#if record.custbody_charge_list_time_group != 'Employee'> <#if timeSummary?seq_index_of("Employee") gt -1 || !timeSummary?has_content > <th colspan="7">Consultant</th></#if></#if>
+    <#if !timeSummary?has_content><th colspan="9">Memo</th></#if>
+     <#if record.custbody_ba_ismanuallyaddeditem == true>
+        <#if record.custbody_withoutcharge_dataforpdf != '[]' && record.custbody_withoutcharge_dataforpdf != ''>
+          <th colspan="4">Item</th>
+        </#if>
+     </#if>
+    <th align="right" colspan="2">Hours</th>
+    <th align="right" colspan="3">Rate</th>
+    <th align="right" colspan="3">Amount</th>
+    </tr>
+  </thead>
+
+<#if excludeSort?seq_index_of(record.custbody_charge_list_time_group) == -1>
+    <#assign sortOrder = record.custbody_charge_list_time_group />
+</#if>
+
+<#assign pageIndex = 0 />
+<#assign lineIndex = 0 />
+
+<#list customObject?sort_by(sortOrder) as custObj>
+  <!--check for unique columns such as Employee/Rate pairs-->
+  <#if record.custbody_charge_list_time_summary != '' && record.custbody_charge_list_time_summary != 'None'>
+    <#assign chargeSummaryValue = "" />
+      <#list timeSummary as timeSum>
+          <#assign chargeSummary = "custObj." + timeSum />
+          <#assign chargeSummaryValue = chargeSummaryValue + chargeSummary?eval />
+      </#list>
+  <#else />
+    <#assign chargeSummaryValue = custObj.internalid />
+  </#if>
+  <#assign summaryString = chargeSummaryValue />
+  <#if uniqueColumns?seq_contains(summaryString)?string("yes", "no") == "no">
+    <#assign lineQty = 0 />
+    <#assign lineAmount = 0 />
+    <#assign minDate = custObj.Date?date />
+    <#assign maxDate = custObj.Date?date />
+    <#assign groupQty = 0 />
+    <#assign groupAmount = 0 />
+    <#assign groupIndex = 0 />
+    <#if record.custbody_charge_list_time_group == 'None'>
+      <#assign chargeGroup = "" />
+    <#else />
+      <#assign chargeGroup = "custObj."+record.custbody_charge_list_time_group />
+      <#assign chargeGroupValue = chargeGroup?eval />
+    </#if>
+    <#if chargeGroupValue! != previousItem && record.custbody_charge_list_time_group != 'None'>
+      <tr>
+        <td colspan="15">
+          <#if record.custbody_charge_list_time_group == 'Date'><span class="groupname">${chargeGroupValue?date?string.long}</span>
+          <#elseif record.custbody_charge_list_time_group == 'Task' /><span class="groupname">${chargeGroupValue?switch(' ()','',''+chargeGroupValue?remove_ending(" (Project Task)")+'')}</span>
+          <#elseif record.custbody_charge_list_time_group == 'Week' /><span class="groupname">${chargeGroupValue?date?string.full} - ${(chargeGroupValue?date?long + 6 * 86400000)?number_to_date?string.full}</span>
+          <#else /><span class="groupname">${chargeGroupValue}</span>
+          </#if>
+        </td>
+      </tr>
+    </#if>
+
+    <!-- combine similar lines-->
+    <#list customObject?sort_by(sortOrder) as custObjCompare>
+      <#if record.custbody_charge_list_time_summary != '' && record.custbody_charge_list_time_summary != 'None'>
+        <#assign chargeSummaryCompareValue = "" />
+        <#list timeSummary as timeSumCompare>
+            <#assign chargeSummaryCompare = "custObjCompare." + timeSumCompare />
+            <#assign chargeSummaryCompareValue = chargeSummaryCompareValue + chargeSummaryCompare?eval />
+        </#list>
+      <#else />
+        <#assign chargeSummaryCompareValue = custObjCompare.internalid />
+      </#if>
+
+      <#if chargeSummaryValue == chargeSummaryCompareValue >
+        <#if custObjCompare.Date?date lte minDate?date> <#assign minDate = custObjCompare.Date /> </#if>
+        <#if custObjCompare.Date?date gte maxDate?date> <#assign maxDate = custObjCompare.Date /> </#if>
+        <#assign lineQty = lineQty + custObjCompare.Quantity?number />
+        <#assign lineAmount = lineAmount + custObjCompare.Amount?number />
+      </#if>
+        
+      <#if record.custbody_charge_list_time_group != 'None'>
+        <#assign chargeGroupCompare = "custObjCompare."+record.custbody_charge_list_time_group />
+        <#assign chargeGroupCompareValue = chargeGroupCompare?eval />
+      </#if>
+      <#if chargeGroupValue == chargeGroupCompareValue>
+        <#assign groupIndex = custObjCompare?index />
+        <#assign groupQty = groupQty + custObjCompare.Quantity?number />
+        <#assign groupAmount = groupAmount + custObjCompare.Amount?number />
+      </#if>
+    </#list>
+
+      <tr>
+        <td colspan="5"><#if record.custbody_charge_list_time_summary == ''>${custObj.Date}<#else />${minDate}<#if minDate != maxDate> - ${maxDate}</#if></#if></td>
+        <#if record.custbody_charge_list_time_group != 'Item'> <#if timeSummary?seq_index_of("Item") gt -1 || !timeSummary?has_content > <td colspan="7">${custObj.Item}</td></#if></#if>
+        <#if record.custbody_charge_list_time_group != 'Employee'> <#if timeSummary?seq_index_of("Employee") gt -1 || !timeSummary?has_content > <td colspan="7">${custObj.Employee}</td></#if></#if>
+        <#if record.custbody_charge_list_time_summary == ''>
+        <td colspan="7"><#if custObj.Memo?length gt 50><small>${custObj.Memo}</small><#else />${custObj.Memo}</#if></td></#if>
+        <#if record.custbody_ba_ismanuallyaddeditem == true>
+          <#if record.custbody_withoutcharge_dataforpdf != '[]' && record.custbody_withoutcharge_dataforpdf != ''>
+            <td colspan="4"> </td>
+          </#if>
+        </#if>
+        <td align="right" colspan="2">${lineQty}</td>    <!--<td align="right" width="60px">${lineQty?string(",##0.00")}</td>-->
+        <td align="right" colspan="3">$${forceCurrency(custObj.Rate)}</td>
+        <td align="right" colspan="3">$${forceCurrency(lineAmount)}</td>
+      </tr>
+    <#assign qtySum = qtySum+lineQty?number />
+    <#assign amtSum = amtSum+lineAmount?number />
+    <#assign previousItem = chargeGroupValue! />
+    <#assign lineIndex = lineIndex + 1 />
+  </#if>
+
+  <!-- add this unique combo to the list so it does not print again -->
+    <#assign uniqueColumns = uniqueColumns + [chargeSummaryValue] />
+
+</#list>
+</table>
+</#if>
+
+<#if qtySum?has_content && amtSum?has_content && qtySum!=0 && amtSum!=0>
+<table class="itemtable" style="width: 100%; padding-top: 0px;">
+    <tr>
+        <td colspan="5"></td>
+        <td colspan="7" align="right"><b>Total</b></td>
+        <td colspan="2" align="right">${qtySum!""}</td>
+        <td align="right" colspan="3">&nbsp;</td>
+        <td align="right" colspan="3">$${forceCurrency(amtSum!"0")}</td>
+    </tr>
+</table>
+</#if>
+
+<!--Code added By Prashanth for no charge record created.. -->
+<#assign otherQtySum = 0 />
+<#assign otherAmtSum = 0 />
+<#if record.custbody_charge_list_time != '[]' && record.custbody_ba_ismanuallyaddeditem == true>
+<#if record.custbody_withoutcharge_dataforpdf != '[]' && record.custbody_withoutcharge_dataforpdf != ''>
+<table class="itemtable" style="width: 100%; margin-top: 5px;">    
+    <thead>
+        <tr>
+        <th colspan="5">Date</th>
+        <th colspan="7"> </th>
+        <th colspan="4">Item</th>
+        <th align="right" colspan="2">Hours</th>
+        <th align="right" colspan="3">Rate</th>
+        <th align="right" colspan="3">Amount</th>
+        </tr>
+    </thead>
+    <#assign customItemObject = record.custbody_withoutcharge_dataforpdf?eval />
+    <#list customItemObject as custItemObj>
+    <#assign lineQuanty = custItemObj.Quantity!0 />
+    <#assign lineAmt = custItemObj.Amount />
+      
+    <tr>
+        <td colspan="5"></td>
+        <td colspan="7"></td>
+        <td colspan="4">${custItemObj.Item}</td>
+        <td align="right" colspan="2">${lineQuanty}</td>
+        <td align="right" colspan="3">$${forceCurrency(custItemObj.Rate)}</td>
+        <td align="right" colspan="3">$${forceCurrency(lineAmt)}</td>
+    </tr>
+    <#if lineQuanty?has_content>
+      <#assign otherQtySum = otherQtySum+lineQuanty?number />
+    </#if>
+    <#assign otherAmtSum = otherAmtSum+lineAmt?number />
+    </#list>
+</table>
+
+<hr />
+<table class="itemtable" style="width: 100%; padding-top: -10px;">
+<tr>
+    <td colspan="5">&nbsp;</td>
+    <td colspan="7">&nbsp;</td>
+    <td colspan="4"><b>Total</b></td>
+    <td colspan="2" align="right">${otherQtySum}</td>
+    <td align="right" colspan="3">&nbsp;</td>
+    <td align="right" colspan="3">$${forceCurrency(otherAmtSum)}</td>
+</tr>
+</table>
+  <p>&nbsp;</p>
+</#if>
+</#if>
+
+</#if>
+<!-- BA - End -->
+
+
+<!-- Expense Based Charge Table -->
+  <#if record.custbody_charge_list_expense_group != 'Hide' && record.custbody_charge_list_expense_group! != ''>
+  <#if record.custbody_charge_list_expense?has_content && record.custbody_charge_list_expense != '[]'>
+
+<#assign customObject = record.custbody_charge_list_expense?eval />
+<#assign previousItem = "" />
+<#assign qtySum = 0 />
+<#assign amtSum = 0 />
+<#assign sortOrder = "Date" />
+
+<table class="itemtable" style="width: 100%; margin-top: 5px;">
+<thead>
+    <tr>
+    <th colspan="5">Date</th>
+    <#if record.custbody_charge_list_expense_group != 'Item'><th colspan="8">Item</th></#if>
+    <#if record.custbody_charge_list_expense_group != 'Employee'><th colspan="8">Employee</th></#if>
+    <th colspan="10">Memo</th>
+    <th align="right" width="60px">Qty</th>
+    <th align="right" width="80px">Rate</th>
+    <th align="right" width="80px">Amount</th>
+    </tr>
+</thead>
+</table>
+
+<#if excludeSort?seq_index_of(record.custbody_charge_list_expense_group) == -1>
+    <#assign sortOrder = record.custbody_charge_list_expense_group />
+</#if>
+<#list customObject?sort_by(sortOrder) as custObj>
+  <#if record.custbody_charge_list_expense_group == 'None'>
+    <#assign chargeGroup = "" />
+  <#else />
+    <#assign chargeGroup = "custObj."+record.custbody_charge_list_expense_group />
+    <#assign chargeGroupValue = chargeGroup?eval />
+  </#if>
+    <#if chargeGroupValue! != previousItem && record.custbody_charge_list_expense_group != 'None'>
+      <#if record.custbody_charge_list_expense_group == 'Date'>
+        <#assign chargeGroupValueDisplay = chargeGroupValue?date /><span class="groupname">${chargeGroupValueDisplay?string.long}</span>
+        <#else /><span class="groupname">${chargeGroupValue}</span></#if>
+    </#if>
+
+<table class="itemtable" style="width: 100%; margin-top: 5px;">
+    <tr>
+        <td colspan="5">${custObj.Date}</td>
+        <#if record.custbody_charge_list_expense_group != 'Item'><td colspan="8">${custObj.Item}</td></#if>
+        <#if record.custbody_charge_list_expense_group != 'Employee'><td colspan="8">${custObj.Employee}</td></#if>
+        <td colspan="10">${custObj.Memo}</td>
+        <td align="right" width="60px">${custObj.Quantity}</td>
+        <td align="right" width="80px">$${forceCurrency(custObj.Rate)}</td>
+        <td align="right" width="80px">$${forceCurrency(custObj.Amount)}</td>
+    </tr>
+</table>
+
+    <#assign qtySum = qtySum+custObj.Quantity?number />
+    <#assign amtSum = amtSum+custObj.Amount?number />
+    <#assign previousItem = chargeGroupValue! />
+
+</#list>
+<hr />
+<#if customObject?size gt 1 && amtSum?has_content && amtSum!=0>
+    <table class="itemtable" style="width: 100%; padding-top: -10px;">
+    <tr>
+        <td colspan="5">&nbsp;</td>
+        <td colspan="8">&nbsp;</td>
+        <td align="right" colspan="10"><b>Total</b></td>
+        <td align="right" width="60px">${qtySum}</td>
+        <td align="right" width="80px">&nbsp;</td>
+        <td align="right" width="80px">$${forceCurrency(amtSum)}</td>
+    </tr>
+    </table>
+  </#if><p>&nbsp;</p>
+</#if>
+</#if>
+
+
+<!-- Fixed Date Based Charge Table -->
+ <#if record.custbody_charge_list_fixed_group != 'Hide' && record.custbody_charge_list_fixed_group! != ''>
+  <#if record.custbody_charge_list_fixed?has_content && record.custbody_charge_list_fixed != '[]'>
+
+<#assign customObject = record.custbody_charge_list_fixed?eval />
+<#assign previousItem = "" />
+<#assign qtySum = 0 />
+<#assign amtSum = 0 />
+<#assign sortOrder = "Date" />
+
+<table class="itemtable" style="width: 100%; margin-top: 5px;">
+<thead>
+    <tr>
+    <th colspan="5">Date</th>
+    <#if record.custbody_charge_list_fixed_group != 'Item'><th colspan="8">Item</th></#if>
+    <th colspan="10">Memo</th>
+    <th align="right" width="60px">Qty</th>
+    <th align="right" width="80px">Rate</th>
+    <th align="right" width="80px">Amount</th>
+    </tr>
+</thead>
+</table>
+
+<#if excludeSort?seq_index_of(record.custbody_charge_list_fixed_group) == -1>
+    <#assign sortOrder = record.custbody_charge_list_fixed_group />
+</#if>
+<#list customObject?sort_by(sortOrder) as custObj>
+  <#if record.custbody_charge_list_fixed_group == 'None'>
+  <#assign chargeGroup = "" />
+  <#else /> 
+    <#assign chargeGroup = "custObj."+record.custbody_charge_list_fixed_group />
+    <#assign chargeGroupValue = chargeGroup?eval />
+  </#if>
+
+    <#if chargeGroupValue! != previousItem && record.custbody_charge_list_fixed_group != 'None'>
+      <#if record.custbody_charge_list_fixed_group == 'Date'>
+        <#assign chargeGroupValueDisplay = chargeGroupValue?date /><span class="groupname">${chargeGroupValueDisplay?string.long}</span>
+        <#else /><span class="groupname">${chargeGroupValue}</span></#if>
+    </#if>
+
+<table class="itemtable" style="width: 100%; margin-top: 5px;">
+    <tr>
+        <td colspan="5">${custObj.Date}</td>
+        <#if record.custbody_charge_list_fixed_group != 'Item'><td colspan="8">${custObj.Item}</td></#if>
+        <td colspan="10">${custObj.Memo}</td>
+        <td align="right" width="60px">${custObj.Quantity}</td>
+        <td align="right" width="80px">$${forceCurrency(custObj.Rate)}</td>
+        <td align="right" width="80px">$${forceCurrency(custObj.Amount)}</td>
+    </tr>
+</table>
+    <#assign qtySum = qtySum+custObj.Quantity?number />
+    <#assign amtSum = amtSum+custObj.Amount?number />
+    <#assign previousItem = chargeGroupValue! />
+
+</#list>
+<hr />
+<#if customObject?size gt 1 && amtSum?has_content && amtSum!=0>
+    <table class="itemtable" style="width: 100%; padding-top: -10px;">
+    <tr>
+        <td colspan="5">&nbsp;</td>
+        <td colspan="8">&nbsp;</td>
+        <td align="right" colspan="10"><b>Total</b></td>
+        <td align="right" width="60px">${qtySum}</td>
+        <td align="right" width="80px">&nbsp;</td>
+        <td align="right" width="80px">$${forceCurrency(amtSum)}</td>
+    </tr>
+    </table>
+  </#if><p>&nbsp;</p>
+ </#if>
+</#if>
+
+<!-- Fixed Milestone Based Charge Table -->
+<#if record.custbody_charge_list_milestone_group != 'Hide' && record.custbody_charge_list_milestone_group! != ''>
+  <#if record.custbody_charge_list_milestone?has_content && record.custbody_charge_list_milestone != '[]'>
+
+<#assign customObject = record.custbody_charge_list_milestone?eval />
+<#assign previousItem = "" />
+<#assign qtySum = 0 />
+<#assign amtSum = 0 />
+<#assign sortOrder = "Date" />
+
+<table class="itemtable" style="width: 100%; margin-top: 5px;">
+<thead>
+    <tr>
+    <#if record.custbody_charge_list_milestone_group != 'Item'><th colspan="8">&nbsp;</th></#if>
+    <th align="right" width="60px">Qty</th>
+    <th align="right" width="80px">Rate</th>
+    <th align="right" width="80px">Amount</th>
+    </tr>
+</thead>
+</table>
+
+<#if excludeSort?seq_index_of(record.custbody_charge_list_milestone_group) == -1>
+    <#assign sortOrder = record.custbody_charge_list_milestone_group />
+</#if>
+<#list customObject?sort_by(sortOrder) as custObj>
+  <#if record.custbody_charge_list_milestone_group == 'None'>
+  <#assign chargeGroup = "" />
+  <#else />
+    <#assign chargeGroup = "custObj."+record.custbody_charge_list_milestone_group />
+    <#assign chargeGroupValue = chargeGroup?eval />
+  </#if>
+    <#if chargeGroupValue! != previousItem && record.custbody_charge_list_milestone_group != 'None'>
+      <#if record.custbody_charge_list_milestone_group == 'Date'>
+        <#assign chargeGroupValueDisplay = chargeGroupValue?date /><span class="groupname">${chargeGroupValueDisplay?string.long}</span>
+        <#else /><span class="groupname">${chargeGroupValue}</span></#if>
+    </#if>
+
+<table class="itemtable" style="width: 100%; margin-top: 5px;">
+    <tr>
+        <#if record.custbody_charge_list_milestone_group != 'Item'><td colspan="8">&nbsp;</td></#if>
+        <td align="right" width="60px">${custObj.Quantity}</td>
+        <td align="right" width="80px">$${forceCurrency(custObj.Rate)}</td>
+        <td align="right" width="80px">$${forceCurrency(custObj.Amount)}</td>
+    </tr>
+</table>
+
+    <#assign qtySum = qtySum+custObj.Quantity?number />
+    <#assign amtSum = amtSum+custObj.Amount?number />
+    <#assign previousItem = chargeGroupValue! />
+</#list>
+<hr />
+<#if customObject?size gt 1 && amtSum?has_content && amtSum!=0>
+    <table class="itemtable" style="width: 100%; padding-top: -10px;">
+    <tr>
+        <td colspan="5">&nbsp;</td>
+        <td colspan="8">&nbsp;</td>
+        <td align="right" colspan="10"><b>Total</b></td>
+        <td align="right" width="60px">${qtySum}</td>
+        <td align="right" width="80px">&nbsp;</td>
+        <td align="right" width="80px">$${forceCurrency(amtSum)}</td>
+    </tr>
+    </table>
+  </#if><p>&nbsp;</p>
+ </#if>
+</#if>
+
+<!-- Project Progress Based Charge Table -->
+<#if record.custbody_charge_list_progress_group != 'Hide' && record.custbody_charge_list_progress_group! != ''>
+  <#if record.custbody_charge_list_progress?has_content && record.custbody_charge_list_progress != '[]'>
+
+<#assign customObject = record.custbody_charge_list_progress?eval />
+<#assign previousItem = "" />
+<#assign qtySum = 0 />
+<#assign amtSum = 0 />
+<#assign sortOrder = "Date" />
+
+<table class="itemtable" style="width: 100%; margin-top: 5px;">
+<thead>
+    <tr>
+    <th colspan="5">Date</th>
+    <#if record.custbody_charge_list_progress_group != 'Item'><th colspan="8">Item</th></#if>
+    <th colspan="10">Memo</th>
+    <th align="right" width="60px">Qty</th>
+    <th align="right" width="80px">Rate</th>
+    <th align="right" width="80px">Amount</th>
+    </tr>
+</thead>
+</table>
+
+<#if excludeSort?seq_index_of(record.custbody_charge_list_progress_group) == -1>
+    <#assign sortOrder = record.custbody_charge_list_progress_group />
+</#if>
+<#list customObject?sort_by(sortOrder) as custObj>
+  <#if record.custbody_charge_list_progress_group == 'None'>
+  <#assign chargeGroup = "" />
+  <#else /> 
+    <#assign chargeGroup = "custObj."+record.custbody_charge_list_progress_group />
+    <#assign chargeGroupValue = chargeGroup?eval />
+  </#if>
+    <#if chargeGroupValue! != previousItem && record.custbody_charge_list_progress_group != 'None'>
+      <#if record.custbody_charge_list_progress_group == 'Date'>
+        <#assign chargeGroupValueDisplay = chargeGroupValue?date /><span class="groupname">${chargeGroupValueDisplay?string.long}</span>
+        <#else /><span class="groupname">${chargeGroupValue}</span></#if>
+    </#if>
+
+<table class="itemtable" style="width: 100%; margin-top: 5px;">
+    <tr>
+        <td colspan="5">${custObj.Date}</td>
+        <#if record.custbody_charge_list_progress_group != 'Item'><td colspan="8">${custObj.Item}</td></#if>
+        <td colspan="10">${custObj.Memo}</td>
+        <td align="right" width="60px">${custObj.Quantity}</td>
+        <td align="right" width="80px">$${forceCurrency(custObj.Rate)}</td>
+        <td align="right" width="80px">$${forceCurrency(custObj.Amount)}</td>
+    </tr>
+</table>
+
+    <#assign qtySum = qtySum+custObj.Quantity?number />
+    <#assign amtSum = amtSum+custObj.Amount?number />
+    <#assign previousItem = chargeGroupValue! />
+
+</#list>
+<hr />
+<#if customObject?size gt 1 && amtSum?has_content && amtSum!=0>
+    <table class="itemtable" style="width: 100%; padding-top: -10px;">
+    <tr>
+        <td colspan="5">&nbsp;</td>
+        <td colspan="8">&nbsp;</td>
+        <td align="right" colspan="10"><b>Total</b></td>
+        <td align="right" width="60px">${qtySum}</td>
+        <td align="right" width="80px">&nbsp;</td>
+        <td align="right" width="80px">$${forceCurrency(amtSum)}</td>
+    </tr>
+    </table>
+  </#if><p>&nbsp;</p>
+ </#if>
+</#if>
+
+<!-- Purchase Based Charge Table -->
+<#if record.custbody_charge_list_purchase_group != 'Hide' && record.custbody_charge_list_purchase_group! != ''>
+  <#if record.custbody_charge_list_purchase?has_content && record.custbody_charge_list_purchase != '[]'>
+
+<#assign customObject = record.custbody_charge_list_purchase?eval />
+<#assign previousItem = "" />
+<#assign qtySum = 0 />
+<#assign amtSum = 0 />
+<#assign sortOrder = "Date" />
+
+<table class="itemtable" style="width: 100%; margin-top: 5px;">
+<thead>
+    <tr>
+    <th colspan="5">Date</th>
+    <#if record.custbody_charge_list_purchase_group != 'Item'><th colspan="8">Item</th></#if>
+    <th colspan="10">Memo</th>
+    <th align="right" width="60px">Qty</th>
+    <th align="right" width="80px">Rate</th>
+    <th align="right" width="80px">Amount</th>
+    </tr>
+</thead>
+</table>
+
+<#if excludeSort?seq_index_of(record.custbody_charge_list_purchase_group) == -1>
+    <#assign sortOrder = record.custbody_charge_list_purchase_group />
+</#if>
+<#list customObject?sort_by(sortOrder) as custObj>
+  <#if record.custbody_charge_list_purchase_group == 'None'>
+  <#assign chargeGroup = "" />
+  <#else /> 
+    <#assign chargeGroup = "custObj."+record.custbody_charge_list_purchase_group />
+    <#assign chargeGroupValue = chargeGroup?eval />
+  </#if>
+    <#if chargeGroupValue! != previousItem && record.custbody_charge_list_purchase_group != 'None'>
+      <#if record.custbody_charge_list_purchase_group == 'Date'>
+        <#assign chargeGroupValueDisplay = chargeGroupValue?date /><span class="groupname">${chargeGroupValueDisplay?string.long}</span>
+        <#else /><span class="groupname">${chargeGroupValue}</span></#if>
+    </#if>
+
+<table class="itemtable" style="width: 100%; margin-top: 5px;">
+    <tr>
+        <td colspan="5">${custObj.Date}</td>
+        <#if record.custbody_charge_list_purchase_group != 'Item'><td colspan="8">${custObj.Item}</td></#if>
+        <td colspan="10">${custObj.Memo}</td>
+        <td align="right" width="60px">${custObj.Quantity}</td>
+        <td align="right" width="80px">$${forceCurrency(custObj.Rate)}</td>
+        <td align="right" width="80px">$${forceCurrency(custObj.Amount)}</td>
+    </tr>
+</table>
+
+    <#assign qtySum = qtySum+custObj.Quantity?number />
+    <#assign amtSum = amtSum+custObj.Amount?number />
+    <#assign previousItem = chargeGroupValue! />
+
+</#list>
+<hr />
+<#if customObject?size gt 1 && amtSum?has_content && amtSum!=0>
+    <table class="itemtable" style="width: 100%; padding-top: -10px;">
+    <tr>
+        <td colspan="5">&nbsp;</td>
+        <td colspan="8">&nbsp;</td>
+        <td align="right" colspan="10"><b>Total</b></td>
+        <td align="right" width="60px">${qtySum}</td>
+        <td align="right" width="80px">&nbsp;</td>
+        <td align="right" width="80px">$${forceCurrency(amtSum)}</td>
+    </tr>
+    </table>
+  </#if><p>&nbsp;</p>
+ </#if>
+</#if>
+
+<!-- start items -->
+<#if record.custbody_ba_ismanuallyaddeditem == true>
+<table class="itemtable" style="width: 100%; margin-top: 10px;">
+  <#list record.item as item>
+<#if item_index==0>
+<thead>
+	<tr>
+	<th scope="col" style="width: 25%; height: 40px;">${item.item@label}</th>
+	<th scope="col" style="width: 30%; height: 40px;">Description</th>
+	<#if item.custcol_ba_iv_serial?has_content>
+      <th scope="col" style="width: 27%; height: 40px;">${item.custcol_ba_iv_serial@label}</th>
+      </#if>
+	<#if item.custcol_ba_iv_serial?has_content>
+      <th scope="col" style="width: 27%; height: 40px;">${item.custcol_ba_iv_start_date@label}</th></#if>
+	<#if item.custcol_ba_iv_serial?has_content>
+      <th scope="col" style="width: 27%; height: 40px;">${item.custcol_ba_iv_end_date@label}</th></#if>
+	<th scope="col" align="right" style="width: 30%; height: 40px;">${item.amount@label}</th>
+	</tr>
+</thead>
+</#if>
+   <#if item.custcol_ba_ismanuallyaddeditem == true>
+<tr>
+	<td style="width: 25%;">${item.item}</td>
+	<td style="width: 30%;">${item.description}</td>
+	<#if item.custcol_ba_iv_serial?has_content>
+      <td style="width: 27%;">${item.custcol_ba_iv_serial}</td></#if>
+	<#if item.custcol_ba_iv_serial?has_content><td style="width: 27%;">${item.custcol_ba_iv_start_date}</td></#if>
+	<#if item.custcol_ba_iv_serial?has_content><td style="width: 27%;">${item.custcol_ba_iv_end_date}</td></#if>
+	<td style="width: 30%;" align="right">${item.amount}</td>
+	</tr>
+  </#if>
+	</#list>
+</table>
+  </#if>
+<!-- end items -->
+
+<table class="total" style="width: 100%; margin-top: 10px;"><tr>
+    <td colspan="4">&nbsp;</td>
+    <td align="right"><b>${record.subtotal@label}</b></td>
+    <td align="right">${record.subtotal}</td>
+    </tr>
+    <tr>
+    <td colspan="4">&nbsp;</td>
+    <td align="right"><b>${record.taxtotal@label} (${record.taxrate}%)</b></td>
+    <td align="right">${record.taxtotal}</td>
+    </tr>
+    <tr class="totalrow">
+    <td background-color="#ffffff" colspan="4">&nbsp;</td>
+    <td align="right"><b>${record.total@label}</b></td>
+    <td align="right">${record.total}</td></tr>
+    <tr>
+    <td colspan="4">&nbsp;</td>
+    <td align="right"><b>${record.custbody_ba_payments_credits_applied@label}</b></td>
+    <td align="right">$${forceCurrency(record.amountremaining - record.total)}</td>
+    <!--td align="right">${record.amountremaining - record.total}</td-->
+    </tr>
+    <tr class="totalrow">
+    <td background-color="#ffffff" colspan="4">&nbsp;</td>
+    <td align="right"><b>${record.amountremaining@label}</b></td>
+    <td align="right">${record.amountremaining}</td></tr>
+    </table>
+
+
+<table class="total" style="width: 100%; margin-top: 15px;">
+  <tr>
+    <td align="center" ><img src="https://1116115.app.netsuite.com/core/media/media.nl?id=31076&amp;c=1116115&amp;h=ow-js6xA-q6XxpJ3pNLXdLeFrbAfTsJito-ZEl7yqGlnfCNv" width="35%" height="35%" /></td>
+  </tr>
+</table>
+
+<table class="total" style="width: 100%; margin-top: 25px;">
+  <tr>
+    <td align="center">ivision reserves the right to charge interest at a rate of 1.5% per month on all overdue balances.</td>
+  </tr>
+    <tr>
+    <td align="center">For billing inquiries or technical support, please call (678) 244-2326.</td>
+  </tr>
+    <tr>
+    <td align="center">EIN: 20-0732041</td>
+  </tr>
+</table>
+</body>
+</pdf>
+
+<#if record.custbody_charge_list_image?has_content && record.custbody_charge_list_image !='[]' && record.custbody_charge_list_include_receipts! == true>
+    <#assign customObject = record.custbody_charge_list_image?eval />
+    <#list customObject as custObj>
+      <#if custObj.URL?has_content && custObj.URL !=''>
+        <#if custObj.Type == 'PDF'>
+          <pdf src="${custObj.URL}" />
+        <#else /> <pdf><body><!--<p><b>${custObj.Employee}</b></p>-->
+          <img src="${custObj.URL}" />
+          </body></pdf>
+        </#if>
+      </#if>
+    </#list>
+</#if>
+</pdfset>

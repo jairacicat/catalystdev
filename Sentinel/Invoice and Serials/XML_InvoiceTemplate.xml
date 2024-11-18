@@ -1,0 +1,424 @@
+<?xml version="1.0"?><!DOCTYPE pdf PUBLIC "-//big.faceless.org//report" "report-1.1.dtd">
+<pdfset>
+<pdf>
+<head>
+	<link name="NotoSans" type="font" subtype="truetype" src="${nsfont.NotoSans_Regular}" src-bold="${nsfont.NotoSans_Bold}" src-italic="${nsfont.NotoSans_Italic}" src-bolditalic="${nsfont.NotoSans_BoldItalic}" bytes="2" />
+	<#if .locale == "zh_CN">
+		<link name="NotoSansCJKsc" type="font" subtype="opentype" src="${nsfont.NotoSansCJKsc_Regular}" src-bold="${nsfont.NotoSansCJKsc_Bold}" bytes="2" />
+	<#elseif .locale == "zh_TW">
+		<link name="NotoSansCJKtc" type="font" subtype="opentype" src="${nsfont.NotoSansCJKtc_Regular}" src-bold="${nsfont.NotoSansCJKtc_Bold}" bytes="2" />
+	<#elseif .locale == "ja_JP">
+		<link name="NotoSansCJKjp" type="font" subtype="opentype" src="${nsfont.NotoSansCJKjp_Regular}" src-bold="${nsfont.NotoSansCJKjp_Bold}" bytes="2" />
+	<#elseif .locale == "ko_KR">
+		<link name="NotoSansCJKkr" type="font" subtype="opentype" src="${nsfont.NotoSansCJKkr_Regular}" src-bold="${nsfont.NotoSansCJKkr_Bold}" bytes="2" />
+	<#elseif .locale == "th_TH">
+		<link name="NotoSansThai" type="font" subtype="opentype" src="${nsfont.NotoSansThai_Regular}" src-bold="${nsfont.NotoSansThai_Bold}" bytes="2" />
+	</#if>
+    <macrolist>
+        <macro id="nlheader">
+            <table class="header" style="width: 100%; padding-top: 4px;"><tr>
+	<td rowspan="3" style="width: 561px;"><img src="https://7493949.app.netsuite.com/core/media/media.nl?id=4978&amp;c=7493949&amp;h=7WRkeVQ5qrUJHL7VGMwONcD8OUG3dQc_s3iXiKAHJRZ9Eofq&amp;fcts=20220125155108&amp;whence=" style="width: 200px; height: 65px;" /></td>
+	<td rowspan="3" style="width: 243px; border-color: rgb(0, 0, 0);"></td>
+	</tr></table>
+        </macro>
+        <macro id="nlfooter">
+           
+<table border="1" class="body" style="width:100%;"><tr>
+	<td ><strong>Labor Terms:&nbsp;${record.terms}</strong></td>
+	<td  rowspan="1" align="center"><a href="${record.custbody_ng_paytrace_pay_link_url}">Pay Invoice via ACH or Credit Card</a></td>
+	<td  align="right"><strong>Non-Labor Terms:${record.terms}</strong></td>
+	</tr></table>
+          <table style="width: 100%">
+                <tr>
+              <td style="width: 100%;" align="center"><b>Page <pagenumber /> of <totalpages /></b></td>
+            </tr>
+          </table>
+          <table border="1" class="body" style="width:100%; padding-top: 5px; padding-bottom: 5px;">
+            <tr>
+	<td ><b>Sentinel Technologies, Inc.</b></td>
+	<td rowspan="1" align="center"><a href="https://www.sentinel.com"> Visit us at SENTINEL.COM</a></td>
+	<td align="right"><strong>InfoSENter (800) 769-4343</strong></td>
+	</tr></table>
+        
+        </macro>
+        <macro id="nlWatermark">
+          <table style="height: 100%; width: 100%">
+            <tr>
+              <td style="width: 100%; height: 100%; vertical-align: middle" align="center"> <p rotate="-45" font-size="90pt" style="color: #e3e3e3; font-weight: bold">   INVOICE
+    </p></td>
+            </tr>
+          </table>
+         
+
+        </macro>
+    </macrolist>
+    <style type="text/css">* {
+		<#if .locale == "zh_CN">
+			font-family: NotoSans, NotoSansCJKsc, sans-serif;
+		<#elseif .locale == "zh_TW">
+			font-family: NotoSans, NotoSansCJKtc, sans-serif;
+		<#elseif .locale == "ja_JP">
+			font-family: NotoSans, NotoSansCJKjp, sans-serif;
+		<#elseif .locale == "ko_KR">
+			font-family: NotoSans, NotoSansCJKkr, sans-serif;
+		<#elseif .locale == "th_TH">
+			font-family: NotoSans, NotoSansThai, sans-serif;
+		<#else>
+			font-family: NotoSans, sans-serif;
+		</#if>
+		}
+		table {
+			font-size: 9pt;
+			table-layout: fixed;
+		}
+        th {
+            font-weight: bold;
+            font-size: 9pt;
+            vertical-align: middle;
+            padding: 6px 6px 3px;
+            color: #333333;
+            border-bottom: 1px;
+        }
+        td {
+            padding: 4px 7px;
+            line-height: 150%;
+        }
+		td p { align:left }
+        b {
+            font-weight: bold;
+            color: #333333;
+        }
+        table.header td {
+            padding: 0px;
+            font-size: 10pt;
+        }
+        table.footer td {
+            padding: 0px;
+            font-size: 8pt;
+        }
+        table.itemtable th {
+            padding-bottom: 10px;
+            padding-top: 10px;
+        }
+        table.body td {
+            padding-top: 2px;
+        }
+        table.total {
+            page-break-inside: avoid;
+        }
+        tr.totalrow {
+            background-color: #e3e3e3;
+            line-height: 200%;
+        }
+        td.totalboxtop {
+            font-size: 12pt;
+            background-color: #e3e3e3;
+        }
+        td.addressheader {
+            font-size: 8pt;
+            padding-top: 6px;
+            padding-bottom: 2px;
+        }
+        td.address {
+            padding-top: 0px;
+        }
+        td.totalboxmid {
+            font-size: 28pt;
+            padding-top: 20px;
+            background-color: #e3e3e3;
+        }
+        td.totalboxbot {
+            background-color: #e3e3e3;
+            font-weight: bold;
+        }
+        span.title {
+            font-size: 28pt;
+        }
+        span.number {
+            font-size: 16pt;
+        }
+        span.itemname {
+            font-weight: bold;
+            line-height: 150%;
+        }
+        hr {
+            width: 100%;
+            color: #d3d3d3;
+            background-color: #d3d3d3;
+            height: 1px;
+        }
+        table.headertable td {
+          line-height: 130%;
+        }
+    .fixed-height-table {
+        width: 100%;      /* Adjust width as needed */
+        table-layout: fixed;
+        height: 500px;    /* Fixed height of the table */
+        overflow: hidden; /* Hides any content that overflows the specified height */
+    }
+    .fixed-height-table thead, .fixed-height-table tbody tr {
+        display: block;
+    }
+</style>
+</head>
+<body header="nlheader" header-height="10%" footer="nlfooter" footer-height="45pt" background-macro="nlWatermark" padding="0.5in 0.3in 0.5in 0.3in" size="Letter">
+   <table class="headertable" border="1" style="margin-top:10px;width:100%;">
+     <tr>
+	   <td style="line-height: 150%"><b>${record.billaddress@label}</b></td>
+       <td align="right" style="border-right: 1px; line-height: 150%">Customer #${record.entity?keep_before(" ")}</td>
+       <td colspan="2" rowspan="2" align="right"><p style="text-align: right"><b>Please Remit To: <br/><br />${companyInformation.custrecord_atlas_svcs_mm_bankdetails} <br /> ${companyInformation.custrecord_atlas_svcs_mm_phone}</b></p></td>
+	</tr>
+	<tr>
+	<td colspan="2" style="border-right: 1px;"><b>Attention: ${record.billattention}<br />${record.billaddressee} <br /> ${record.billaddr1} <br /> <#if record.billaddr2?has_content> ${record.billaddr2} <br /> </#if> ${record.billcity}, ${record.billstate}&nbsp; &nbsp; ${record.billzip}</b></td>
+
+	</tr></table>
+
+
+<table border="1" class="body" style="margin-top:10px; padding-bottom: 10px;width:100%;"><tr>
+	<th colspan="3">Purchase Order</th>
+  	<th colspan="2">Reference#</th>
+    <th colspan="3">Contract Addendum</th>
+    <th colspan="3">Account Manager</th>
+	<th colspan="2">Invoice Date</th>
+	<th colspan="2">Invoice#</th>
+	</tr>
+	<tr>
+	<td colspan="3">${record.otherrefnum}</td>
+    <td colspan="2">     
+       <#if record.custbody_sti_invoice_type == 'Channel Online'> ${record.createdfrom}
+       <#elseif record.custbody_sti_invoice_type == 'Projects'> ${record.custbody_sti_sn_project_number}
+       <#elseif record.custbody_sti_invoice_type == 'Service Tickets'> ${record.custbody_sti_service_ticket}
+       <#elseif record.custbody_sti_invoice_type == 'Sales Orders' && record.custbody_sti_service_ticket != ''> ${record.custbody_sti_service_ticket}
+       <#elseif record.custbody_sti_invoice_type == 'Sales Orders' && record.custbody_sti_service_ticket == ''> ${record.createdfrom}
+       <#elseif record.custbody_sti_invoice_type == 'SuiteBilling'> &nbsp;
+       <#elseif record.custbody_sti_invoice_type == ''> ${record.createdfrom}
+      </#if>
+</td>
+    <td colspan="3">&nbsp;</td>
+    <td colspan="3">${record.salesrep}</td>
+	<td colspan="2">${record.trandate}</td>
+	<td colspan="2">${record.tranid}</td>
+	</tr></table>
+
+<table border="1" class="body" style="margin-top:10px;width:100%;"><tr>
+	<th style="width: 70%">Description of Services</th>
+	<th style="width:30%;"  align="right">PCR Reference</th>
+	</tr>
+	<tr>
+	<td style="width: 70%;" align="left">
+       <#if record.custbody_sti_invoice_type == 'Channel Online'> ${record.custbody_sti_invoice_type}
+       <#elseif record.custbody_sti_invoice_type == 'Projects'> ${record.custbody_sti_project_name}
+       <#elseif record.custbody_sti_invoice_type == 'Sales Orders'> ${record.custbody_ctc_u_short_description}
+       <#elseif record.custbody_sti_invoice_type == 'Service Tickets'> ${record.custbody_ctc_u_short_description}
+       <#elseif record.custbody_sti_invoice_type == 'SuiteBilling'> ${record.custbody_ctc_u_short_description}
+       <#elseif record.custbody_sti_invoice_type == ''> <#if record.custbody_ctc_u_short_description != ''> ${record.custbody_ctc_u_short_description} <#else> ${record.custbody_sti_project_name}</#if>
+      </#if>
+    
+    </td>
+	
+	<td style="width: 30%" align="right">
+   &nbsp;
+      
+    </td>
+	</tr></table>
+<!-- Initialize temporary storage for processing -->
+<#assign finalItems = []>
+<#assign processedKeys = []>
+
+<!-- First loop to gather all items and group them -->
+<#list record.item as item>
+  <#if item.custcol_sti_line_trans_invoice_group != "" && record.custbody_sti_expand_invoice_groups_inv == false>
+    <!-- Create a unique key for grouping, combining item, category, and rate -->
+    <#assign groupKey = "_" + item.custcol_sti_line_trans_invoice_group>
+    
+    <!-- Check if this key has been processed -->
+    <#if !processedKeys?seq_contains(groupKey)>
+      <!-- New group, collect similar items -->
+      <#assign tempQuantity = 0>
+      <#assign tempAmount = 0>
+      <#assign tempDescription = []>
+      
+      <!-- Inner loop to sum quantities and amounts for the same group -->
+      <#list record.item as subItem>
+        <#if item.custcol_sti_line_trans_invoice_group != "">
+          <#assign subGroupKey = "_" + subItem.custcol_sti_line_trans_invoice_group>
+        <#if groupKey == subGroupKey>
+          <#assign tempQuantity = tempQuantity + subItem.quantity>
+          <#assign tempAmount = tempAmount + subItem.amount>
+          <#assign tempDescription = tempDescription + [subItem.description] >
+        </#if>
+        </#if>
+      </#list>
+      
+      <!-- Append the grouped data to the final list -->
+      <#assign finalItems = finalItems + [{"item": item.item, "description": tempDescription?join("<br />"), "quantity": tempQuantity, "rate": item.rate, "amount": tempAmount, "custcol_sti_line_trans_invoice_group": item.custcol_sti_line_trans_invoice_group, "shipaddress": item.shipaddress, "custcol_sti_do_not_print": item.custcol_sti_do_not_print, "suppress": item.custcol_suppress_on_inv_print, "startdate": item.custcol_ns_service_start, "enddate": item.custcol_ns_service_end}]>
+        
+      <!-- Mark this key as processed -->
+      <#assign processedKeys = processedKeys + [groupKey]>
+
+  </#if>
+         <#else>
+            <#assign finalItems = finalItems + [{"item": item.item, "description": item.description, "quantity": item.quantity, "rate": item.rate, "amount": item.amount, "custcol_sti_line_trans_invoice_group": item.custcol_sti_line_trans_invoice_group,  "shipaddress": item.shipaddress, "custcol_sti_do_not_print": item.custcol_sti_do_not_print,  "suppress": item.custcol_suppress_on_inv_print, "startdate": item.custcol_ns_service_start, "enddate": item.custcol_ns_service_end}]>
+    </#if>
+</#list>
+
+
+<!-- Output the final grouped items -->
+
+<#-- Function to get address up to the state line -->
+<#function getAddressUpToState address>
+    <#-- Split address into lines -->
+    <#assign lines = address?split("<br />")>
+    <#assign result = "">
+
+    <#-- Loop through lines and add until we find the state abbreviation -->
+    <#list lines as line>
+        <#if line?matches(".*[A-Z]{2}.*")>
+            <#-- Add the line with the state and break -->
+            <#assign result += line>
+            <#break>
+        <#else>
+            <#-- Add the line and newline -->
+            <#assign result += line + "<br />">
+        </#if>
+    </#list>
+
+    <#-- Trim and return the result -->
+ 
+    <#return result>
+</#function>
+
+
+<#if record.item?has_content>
+<#assign ctr = 8>
+<table border="1"  style="margin-top:10px;width:100%; padding-bottom: 30px; ">
+<thead>
+   <tr>
+      <th colspan="6">Description</th>
+      <th colspan="3">Address</th>
+      <th colspan="1">Qty</th>
+      <th align="right" colspan="2">Unit Price</th>
+      <th align="right" colspan="2" style="padding-right: 5px;">Ext Price</th>
+   </tr>
+</thead>
+
+<#if record.custbody_sti_expand_invoice_groups_inv == true>
+      <#assign processedGroups = []>
+      <#list finalItems?sort_by("custcol_sti_line_trans_invoice_group") as outerItem>
+      <#if processedGroups?seq_index_of(outerItem.custcol_sti_line_trans_invoice_group) == -1 >
+        
+           <#assign currentGroup = outerItem.custcol_sti_line_trans_invoice_group>
+           <#assign processedGroups = processedGroups + [outerItem.custcol_sti_line_trans_invoice_group]>
+
+              <#if currentGroup != "">
+         <tr>
+                   <td colspan="6"><b>${outerItem.custcol_sti_line_trans_invoice_group}</b></td>
+                   <td colspan="7">&nbsp;</td>
+                </tr>
+      </#if>
+          <#list finalItems?sort_by("custcol_sti_line_trans_invoice_group") as item>
+          <#if item.custcol_sti_do_not_print == false && currentGroup == item.custcol_sti_line_trans_invoice_group> 
+          <tr>
+             <td colspan="6">
+                <#assign itemName = item.item + "<br />">
+                <#if record.custbody_sti_invoice_type == 'SuiteBilling'> <#assign itemName = ""></#if>
+                <#if item.suppress == true> <#assign itemName = ""> </#if>
+                <#if record.custbody_sti_suppress_part_on_invoice == true> <#assign itemName = ""></#if>
+                <#if item.custcol_sti_line_trans_invoice_group?has_content && record.custbody_sti_expand_invoice_groups_inv == false> ${item.custcol_sti_line_trans_invoice_group} 
+                <#elseif item.custcol_sti_line_trans_invoice_group?has_content && record.custbody_sti_expand_invoice_groups_inv == true> <#if item.startdate?has_content && item.enddate?has_content> ${item.startdate} - ${item.enddate} <br /></#if>${item.description} 
+                <#else>${itemName} <#if item.startdate?has_content && item.enddate?has_content> ${item.startdate} - ${item.enddate} <br /></#if>${item.description}
+                </#if>
+             </td>
+             <td colspan="3"><#if (record.custbody_sti_expand_invoice_groups_inv == true) || (item.custcol_sti_line_trans_invoice_group == "" && record.custbody_sti_expand_invoice_groups_inv == false)><#if item.shipaddress != ""> ${getAddressUpToState(item.shipaddress)} <#else>${record.shipaddr1} <br/> ${record.shipcity}<#if record.shipstate != "">, ${record.shipstate} </#if></#if></#if></td>
+             <td colspan="1">
+               <#if record.custbody_sti_suppress_qty_on_invoice == true>
+               <#else>
+                    <#if (record.custbody_sti_suppress_qty_on_invoice == false && item.custcol_sti_line_trans_invoice_group == "") || record.custbody_sti_expand_invoice_groups_inv == true>${item.quantity}</#if>
+                </#if>
+               </td>
+             <td align="right" colspan="2">
+                   <#if record.custbody_sti_suppress_price_on_invoice == true>
+                   <#else>
+                              <#if (record.custbody_sti_suppress_price_on_invoice == false && item.custcol_sti_line_trans_invoice_group == "")  || record.custbody_sti_expand_invoice_groups_inv == true> ${item.rate}
+                              </#if>
+                    </#if>
+             </td>
+             <td align="right" colspan="2" style="padding-right: 5px;"><#if record.custbody_sti_suppress_price_on_invoice == false> ${item.amount?string.currency}</#if></td>
+          </tr>
+          <#assign ctr = ctr-1>
+          <#if ctr == -1><#assign ctr = 8></#if>
+          </#if>
+          </#list>
+      </#if>
+    
+          </#list>
+<#else>
+    <#list finalItems as item>
+            <#if item.custcol_sti_do_not_print == false>
+                    <tr>
+                       <td colspan="6">
+                          <#assign itemName = item.item + "<br />">
+                          <#if record.custbody_sti_invoice_type == 'SuiteBilling'> <#assign itemName = ""></#if>
+                          <#if item.suppress == true> <#assign itemName = ""> </#if>
+                          <#if record.custbody_sti_suppress_part_on_invoice == true> <#assign itemName = ""></#if>
+                          <#if item.custcol_sti_line_trans_invoice_group?has_content && record.custbody_sti_expand_invoice_groups_inv == false> ${item.custcol_sti_line_trans_invoice_group} 
+                          <#elseif item.custcol_sti_line_trans_invoice_group?has_content && record.custbody_sti_expand_invoice_groups_inv == true> ${item.custcol_sti_line_trans_invoice_group} <br />  <#if item.startdate?has_content && item.enddate?has_content> ${item.startdate} - ${item.enddate} <br /></#if>${item.description} 
+                          <#else>${itemName}  <#if item.startdate?has_content && item.enddate?has_content> ${item.startdate} - ${item.enddate} <br /></#if> ${item.description}
+                          </#if>  
+                       </td>
+                       <td colspan="3"><#if (record.custbody_sti_expand_invoice_groups_inv == true) || (item.custcol_sti_line_trans_invoice_group == "" && record.custbody_sti_expand_invoice_groups_inv == false)><#if item.shipaddress != ""> ${getAddressUpToState(item.shipaddress)} <#else>${record.shipaddr1} <br/> ${record.shipcity}<#if record.shipstate != "">, ${record.shipstate} </#if></#if></#if></td>
+                       <td colspan="1">
+                           <#if record.custbody_sti_suppress_qty_on_invoice == true>
+                           <#else>
+                                <#if (record.custbody_sti_suppress_qty_on_invoice == false && item.custcol_sti_line_trans_invoice_group == "") || record.custbody_sti_expand_invoice_groups_inv == true>${item.quantity}</#if>
+                            </#if>
+                           </td>
+                        <td align="right" colspan="2">
+                           <#if record.custbody_sti_suppress_price_on_invoice == true>
+                           <#else>
+                                      <#if (record.custbody_sti_suppress_price_on_invoice == false && item.custcol_sti_line_trans_invoice_group == "")  || record.custbody_sti_expand_invoice_groups_inv == true> ${item.rate}
+                                      </#if>
+                            </#if>
+                       </td>
+                       <td align="right" colspan="2" style="padding-right: 5px;"><#if record.custbody_sti_suppress_price_on_invoice == false> ${item.amount?string.currency}</#if></td>
+                    </tr>
+                  <#assign ctr = ctr-1>
+                  <#if ctr == -1><#assign ctr = 8></#if>
+            </#if>
+    </#list>
+</#if>
+ 
+  <tr><td >&nbsp;</td></tr>
+   <tr>
+    <td colspan="10" align="right">Sub-Total</td>
+     <td colspan="2"></td>
+     <td colspan="2" style="border-top: 1px; margin-right: 5px;" align="right">${record.subtotal}</td>
+   </tr>
+  <tr>
+    <td colspan="10" align="right">Total Taxes</td>
+     <td colspan="2"></td>
+     <td colspan="2"  align="right" style="margin-right: 5px;">${record.taxtotal}</td>
+   </tr>
+  <tr>
+    <td colspan="10" align = "right">Total Payable in USD</td>
+    <td></td>
+     <td colspan="3" style="border-bottom: 3px; border-bottom-style: double; margin-right: 5px;" align="right">${record.total}</td>
+   </tr>
+  <!-- <#if ctr gt 0> 
+     <#list 1..ctr as itemloop>
+    <tr>
+    <td  rowspan="2">&nbsp;</td>
+    </tr>
+    </#list>
+   </#if>
+-->
+</table>
+</#if>
+
+
+</body>
+</pdf>
+  <#assign invoicetype = '' >
+  <#if record.custbody_sti_invoice_type == 'Service Tickets'> <#assign invoicetype = 'service' /> <#elseif record.custbody_sti_invoice_type == 'SuiteBilling'> <#assign invoicetype = 'suitebilling' /> </#if>
+ <#include "https://7493949.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=3178&deploy=1&compid=7493949&ns-at=AAEJ7tMQLiZuPl0D4P0PuSAbM8uahn_f1itxJPiG7Q7v26PT0vE&type=${invoicetype}&invoice=${record.id}" />
+</pdfset>
