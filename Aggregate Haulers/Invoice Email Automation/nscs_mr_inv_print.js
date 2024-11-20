@@ -102,18 +102,35 @@ define(['N/config', 'N/file', 'N/format', 'N/record', 'N/render', 'N/runtime', '
                     soLineArr.push(lineObj)
                 }
                 log.debug('soLineArr', soLineArr)
+                var invLines = invRec.getLineCount('item');
+                log.debug("invLines", invLines)
                 for(var x=0;x<soLineArr.length;x++){
                     var invObj = {};
                     var item = '';
                     var quantity = 0;
                     var rate = 0;
                     var amount = 0;
+                    var lineRate1 = invRec.getSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'rate',
+                        line:x
+                    });
+                    log.debug("lineRate1", lineRate1)
+                    log.debug("lineRate2", soLineArr[x].rate)
                     var itemLine = invRec.findSublistLineWithValue({
                         sublistId:'item',
                         fieldId:'rate',
                         value:soLineArr[x].rate
                     });
-                    log.debug('itemLine', itemLine)
+                    log.debug("itemLine", itemLine)
+                    if((lineRate1===soLineArr[x].rate && itemLine ===-1) || lineRate1===soLineArr[x].rate && invLines > 1){
+                        itemLine = invRec.findSublistLineWithValue({
+                            sublistId:'item',
+                            fieldId:'item',
+                            value:soLineArr[x].item
+                        });
+                        log.debug('itemLine 2', itemLine)
+                    }
                     if(itemLine >= 0) {
                         var lineID = invRec.getSublistValue({
                             sublistId: 'item',

@@ -47,12 +47,19 @@ define(['N/search', 'N/url', 'N/runtime', 'N/file'],
                 URL_DOMAIN = getURLDomain();
                 log.debug("URL_DOMAIN", URL_DOMAIN);
 
+                let INVOICE_REC = record.load({
+                    type: invoiceType,
+                    id: invoiceId
+                });
+
+                let invoiceAttachment = INVOICE_REC.getValue({fieldId: 'custbody_so_invoice_body_attachment'}).toLowerCase();
+
                 //If Invoice Type = Service, attach all PDFs in the Invoice's Files tab.
                 if(invoiceType == 'service'){
                     let returnXML = "&nbsp;";
                     log.debug("Service - Invoice ID", invoiceId);
 
-                    if(invoiceId){
+                    if(invoiceId && (invoiceAttachment.indexOf("no detail") > -1 )){
                         let pdfsOnInvoice = getPDFsOnInvoice(invoiceId);
                         log.debug("PDFS on Invoice", pdfsOnInvoice);
                         if(pdfsOnInvoice.length > 0){
@@ -81,7 +88,7 @@ define(['N/search', 'N/url', 'N/runtime', 'N/file'],
                     log.debug("SuiteBilling - Invoice ID", invoiceId);
                     log.debug("SuiteBilling - Attachment Text", attachmentText);
 
-                    if(invoiceId && attachmentText){
+                    if(invoiceId && attachmentText && (invoiceAttachment.indexOf("no detail") > -1 )){
                         let pdfToAttach = getPDFFromFileCabinet(formatString(attachmentText));
                         log.debug("PDF to Attach", pdfToAttach);
                         if(pdfToAttach != ''){
@@ -103,7 +110,7 @@ define(['N/search', 'N/url', 'N/runtime', 'N/file'],
                     let transactionTexts = getRelatedTransactions(invoiceId);
                     log.debug("transactionTexts", transactionTexts);
 
-                    if(invoiceId && transactionTexts){
+                    if(invoiceId && transactionTexts && (invoiceAttachment.indexOf("no detail") > -1 )){
                         let pdfToAttach = getPDFFromFileCabinet2(transactionTexts);
                         log.debug("PDF to Attach", pdfToAttach);
                         if(pdfToAttach != ''){
