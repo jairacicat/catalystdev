@@ -88,12 +88,12 @@ define(['N/record', 'N/search', 'N/log', 'N/runtime', 'SuiteScripts/CTC.Sentinel
                     fieldId: 'custbody_ctc_inv_addto_retainer'
                 });
 
-                var updateRetainer = current_rec.getValue({
-                    fieldId: 'custbody_ctc_update_retainer'
+                var addedToBudget = current_rec.getValue({
+                    fieldId: 'custbody_ctc_rtnr_addtobudget'
                 });
 
                 log.debug(stLogTitle, 'isRetainerReference' + isRetainerReference + ' |parentRetainerId:' + parentRetainerId + ' |retainerId:' + retainerId + ' itemCount: ' + itemCount + ' |totalTax:' + totalTax);
-                log.debug(stLogTitle, 'updateRetainer: ' + updateRetainer + ' |parentRetainer:' + parentRetainerId);
+                log.debug(stLogTitle, 'addedToBudget: ' + addedToBudget + ' |parentRetainer:' + parentRetainerId);
 
                 for (var i = 0; i <= itemCount - 1; i++) {
 
@@ -191,20 +191,25 @@ define(['N/record', 'N/search', 'N/log', 'N/runtime', 'SuiteScripts/CTC.Sentinel
                             ignoreFieldChange: true
                         });
 
-                        current_rec.save({
-                            enableSourcing: false,
-                            ignoreMandatoryFields: true
-                        });
                     }
 
                 }
 
                 //09-09-2024 Add retainer budget to parent retainer "Add to Retainer"
                 if (addToRetainer && !rtnrutil.isEmpty(parentRetainerId)) {
-                    //Update parent retainer budget
-                    var updatePTStat = rtnrutil.updateParentRetainer(parentRetainerId, retainerAmount, customerId);
-                    log.audit(stLogTitle, 'addToRetainer:' + updatePTStat);
 
+                    //Only trigger if Added To Budget is blank
+                    if(addedToBudget != true){
+                        //Update parent retainer budget
+                        var updatePTStat = rtnrutil.updateParentRetainer(parentRetainerId, retainerAmount, customerId);
+                        log.audit(stLogTitle, 'addToRetainer:' + updatePTStat);
+
+                        //Update added to budget field to prevent re-adding
+                        current_rec.setValue({
+                            fieldId: 'custbody_ctc_rtnr_addtobudget',
+                            value: true
+                        });
+                    }
                 }
 
                 //Update/activate parent retainer record
@@ -234,6 +239,9 @@ define(['N/record', 'N/search', 'N/log', 'N/runtime', 'SuiteScripts/CTC.Sentinel
 
                 }
 
+                current_rec.save({
+                    ignoreMandatoryFields: true
+                });
 
             } // END IF CONTEXT
 
