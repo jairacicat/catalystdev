@@ -172,10 +172,7 @@ define(['N/record', 'N/search', 'N/log', 'N/runtime', 'SuiteScripts/CTC.Sentinel
                             ignoreFieldChange: true
                         });*/
 
-                        current_rec.save({
-                            enableSourcing: false,
-                            ignoreMandatoryFields: true
-                        });
+
                     }
 
                 }
