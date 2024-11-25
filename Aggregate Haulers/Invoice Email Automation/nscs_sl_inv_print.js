@@ -106,18 +106,35 @@ define(['N/file', 'N/format', 'N/record', 'N/render', 'N/runtime', 'N/search', '
                     soLineArr.push(lineObj)
                 }
                 log.debug("soLineArr",soLineArr)
+                var invLines = invRec.getLineCount('item');
+                log.debug("invLines", invLines)
                 for(var x=0;x<soLineArr.length;x++){
                     var invObj = {};
                     var item = '';
                     var quantity = 0;
                     var rate = 0;
                     var amount = 0;
+                    var lineRate1 = invRec.getSublistValue({
+                        sublistId: 'item',
+                        fieldId: 'rate',
+                        line:x
+                    });
+                    log.debug("lineRate1", lineRate1)
+                    log.debug("lineRate2", soLineArr[x].rate)
                     var itemLine = invRec.findSublistLineWithValue({
                         sublistId:'item',
                         fieldId:'rate',
                         value:soLineArr[x].rate
                     });
                     log.debug("itemLine", itemLine)
+                    if((lineRate1===soLineArr[x].rate && itemLine ===-1) || lineRate1===soLineArr[x].rate && invLines > 1){
+                        itemLine = invRec.findSublistLineWithValue({
+                            sublistId:'item',
+                            fieldId:'item',
+                            value:soLineArr[x].item
+                        });
+                        log.debug('itemLine 2', itemLine)
+                    }
                     if(itemLine >= 0) {
                         var lineID = invRec.getSublistValue({
                             sublistId: 'item',
@@ -336,12 +353,20 @@ define(['N/file', 'N/format', 'N/record', 'N/render', 'N/runtime', 'N/search', '
                         invRec.setValue({fieldId:'custbody_nscs_high_vol_inv',value:true});
                         invRec.save({ignoreMandatoryFields: true});
                         try{
-                            var invTask = task.create({
+                            /*var invTask = task.create({
                                 taskType: task.TaskType.MAP_REDUCE,
                                 scriptId: 'customscript_nscs_mr_inv_print',
                                 deploymentId: 'customdeploy_nscs_mr_inv_print',
                                 params: {
                                     custscript_inv_rec_id: recID
+                                }
+                            });*/
+                            var invTask = task.create({
+                                taskType: task.TaskType.SCHEDULED_SCRIPT,
+                                scriptId: 'customscript_nscs_ss_inv_print',
+                                deploymentId: 'customdeploy_nscs_ss_inv_print',
+                                params: {
+                                    custscript_nscs_inv_rec_id: recID
                                 }
                             });
                             invTask.submit();
@@ -352,9 +377,9 @@ define(['N/file', 'N/format', 'N/record', 'N/render', 'N/runtime', 'N/search', '
                             });
                         }
                         catch(err2){
-                            log.error("Error in calling M/R", err2)
+                            log.error("Error in calling SS", err2)
                             log.debug("error details", err2.message)
-                            if(err2.name==='MAP_REDUCE_ALREADY_RUNNING'){
+                            /*if(err2.name==='MAP_REDUCE_ALREADY_RUNNING'){
                                 var html = '<!DOCTYPE html>'+'<html lang="en">'+'<head>'+'<meta charset="UTF-8">'+'<title>Map Reduce Error</title>'+'</head>\n' +
                                     '<body>'+'<p><b>The Map/Reduce script to generate Owner statements is currently still running. Please wait to generate this statement until after the script has completed execution. You can view the Map Reduce status page here:</b></p>'+'<p width="80%">https://8152306-sb1.app.netsuite.com/app/common/scripting/mapreducescriptstatus.nl?sortcol=dcreated&sortdir=DESC&date=TODAY&datefrom=11/05/2024&dateto=11/05/2024&scripttype=1203&primarykey=1954</p>'+'</body>\n' +
                                     '</html>'
@@ -362,7 +387,17 @@ define(['N/file', 'N/format', 'N/record', 'N/render', 'N/runtime', 'N/search', '
                                 var html = '<!DOCTYPE html>'+'<html lang="en">'+'<head>'+'<meta charset="UTF-8">'+'<title>Map Reduce Error</title>'+'</head>\n' +
                                     '<body>'+'<p><b>'+err2.message+'</b></p>'+'</body>\n' +
                                     '</html>'
+                            }*/
+                            if(err2.name==='FAILED_TO_SUBMIT_JOB_REQUEST_1'){
+                                var html = '<!DOCTYPE html>'+'<html lang="en">'+'<head>'+'<meta charset="UTF-8">'+'<title>Scheduled Script Error</title>'+'</head>\n' +
+                                    '<body>'+'<p><b>The Scheduled script to generate invoices is currently still running. Please wait to generate this invoice until after the script has completed execution. You can view the Scheduled Script status page here:</b></p>'+'<p width="80%">https://8152306-sb1.app.netsuite.com/app/common/scripting/scriptstatus.nl?daterange=ALL&datefrom=&dateto=&scripttype=1204&primarykey=1956&queueid=&jobstatefilterselect=&runtimeversion=&sortcol=dcreated&sortdir=DESC&csv=HTML&OfficeXML=F&pdf=&size=50&_csrf=RkchuxcP--fhz5gle4fqSG43eGGeWRRW69_dX_fjGEvb-</p>'+'</body>\n' +
+                                    '</html>'
+                            }else{
+                                var html = '<!DOCTYPE html>'+'<html lang="en">'+'<head>'+'<meta charset="UTF-8">'+'<title>Scheduled Script Error</title>'+'</head>\n' +
+                                    '<body>'+'<p><b>'+err2.message+'</b></p>'+'</body>\n' +
+                                    '</html>'
                             }
+
                             scriptContext.response.write(html);
                         }
                     }
