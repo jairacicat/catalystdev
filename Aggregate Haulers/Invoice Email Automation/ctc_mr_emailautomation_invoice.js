@@ -31,49 +31,23 @@
         const SPARAM_SAVEDSEARCH = 'custscript_emailautomation_inv_ss';
         const SPARAM_EMAIL_TEMPLATE = 'custscript_emailautomation_inv_template';
         const SPARAM_EMAILAUTHOR = 'custscript_emailautomation_inv_author';
-        const SPARAM_SCRIPT = 'custscript_emailautomation_inv_script';
-        const SPARAM_SCRIPTDEPLOYMENT = 'custscript_emailautomation_inv_dep';
-        const SPARAM_FOLDER = 'custscript_emailautomation_inv_folder';
-        const SPARAM_PDFS_CREATED = 'custscript_emailautomation_inv_pdfcreate';
-    
-        const LOG_CACHE = 'EMAIL_AUTOMATION_CACHE';
+        const SPARAM_FOLDER = 'custscript_emailautomation_inv_folder';;
     
         function getInputData() {
             let SS_ID = runtime.getCurrentScript().getParameter({name: SPARAM_SAVEDSEARCH});
 
            
             if (SS_ID) {
+                // Create a log record early in the process
+                let LOG_REC = record.create({
+                    type: "customrecord_ctc_emailsending_logs"
+                });
+                LOG_REC.setValue("custrecord_ctc_emailautomationlog_status", "In Progress");
+                LOG_REC.setValue("custrecord_ctc_emailautomationlog_type", "Invoice");
 
-                let PDF_CREATED = runtime.getCurrentScript().getParameter({name: SPARAM_PDFS_CREATED});
-                log.audit("PDF Created", PDF_CREATED);
-
-                if(PDF_CREATED == true || PDF_CREATED == "true"){
-                    let LOG_ID = getLogId()
-                    log.audit("LOG ID - sending Emails", LOG_ID);
-
-                    let LOG_REC = record.load({
-                        type: "customrecord_ctc_emailsending_logs",
-                        id: LOG_ID
-                    });
-        
-                    LOG_REC.setValue("custrecord_ctc_emailautomationlog_status", "Sending Emails");
-                    LOG_ID = LOG_REC.save({ignoreMandatoryFields: true});
-
-                    log.audit("Log record created updated - sending emails", LOG_ID);
-                }
-                else{
-                     // Create a log record early in the process
-                    let LOG_REC = record.create({
-                        type: "customrecord_ctc_emailsending_logs"
-                    });
-                    LOG_REC.setValue("custrecord_ctc_emailautomationlog_status", "In Progress");
-                    LOG_REC.setValue("custrecord_ctc_emailautomationlog_type", "Invoice");
-
-                    let LOG_ID = LOG_REC.save({ignoreMandatoryFields: true});
-                    log.debug("Log record created", LOG_ID);
-                }
+                let LOG_ID = LOG_REC.save({ignoreMandatoryFields: true});
+                log.debug("Log record created", LOG_ID);
                
-    
                 return search.load({id: SS_ID});
             }
             return null;
@@ -102,94 +76,105 @@
             let amount = reduceValues.values.amount;
            
             try {
-                let PDF_CREATED = runtime.getCurrentScript().getParameter({name: SPARAM_PDFS_CREATED});
-                log.audit("PDF_CREATED", PDF_CREATED)
-                log.debug("entityId", entityId);
-                if(PDF_CREATED || PDF_CREATED == 'true'){
-                    //Get Date for timestamp:
-                    let fileName = documentNumber + "_PDF";
-                    let fileId = getFile(fileName);
+                //Call scheduled script to create the file:
+                let invTask = task.create({
+                    taskType: task.TaskType.SCHEDULED_SCRIPT,
+                    scriptId: 'customscript_nscs_ss_inv_print',
+                    deploymentId: 'customdeploy_ss_printinvoice_email',
+                    params: {
+                        custscript_nscs_inv_rec_id: reduceKey
+                    }
+                });
+                let invTaskId = invTask.submit();
 
-                    log.debug("File ID", fileId);
-                    if(fileId){
-                        let pdfFile = file.load({id: fileId});
-                        let EMAIL_TEMPLATE = runtime.getCurrentScript().getParameter({name: SPARAM_EMAIL_TEMPLATE});
-                        let EMAIL_AUTHOR = runtime.getCurrentScript().getParameter({name: SPARAM_EMAILAUTHOR});
-    
-                        if(EMAIL_TEMPLATE){
-                            let mergeResult = render.mergeEmail({
-                                templateId: EMAIL_TEMPLATE,
-                                transactionId: parseInt(reduceKey)
-                            });
-            
-                            email.send({
-                                author: EMAIL_AUTHOR,
-                                recipients: entityId,
-                                subject: mergeResult.subject,
-                                body: mergeResult.body,
-                                attachments: [pdfFile],
-                                relatedRecords: {
-                                    transactionId: reduceKey,
-                                    entityId: entityId
-                                }
-                            });
+                let taskStatus = task.checkStatus({taskId: invTaskId});
+                log.debug("taskStatus", taskStatus.status);
+                log.debug("taskStatus check", taskStatus.status == "COMPLETE");
+                while(taskStatus.status != "COMPLETE" || taskStatus.status != "FAILED"){
+
+                    taskStatus = task.checkStatus({taskId: invTaskId});
+                    if(taskStatus.status == "COMPLETE" || taskStatus.status == "FAILED"){
+                        break;
+                    }
+                }
+                log.debug("Task Status is complete");
+                //Get File ID of created Invoice PDF
+
+                let fileName = documentNumber + "_PDF";
+                let fileId = getFile(fileName);
+                log.debug("File ID", fileId);
+                if(fileId){
+                   
+                    let pdfFile = file.load({id: fileId});
+                    let fileURL = "";
+                    log.debug("File Size", pdfFile.size);
+                    let fileAttachments = [pdfFile];
+                    if(pdfFile.size > 10000000){
+                        log.debug("File too big for email");
+                        pdfFile.isOnline = true;
+                        pdfFile.save();
+                        pdfFile = file.load({id: fileId});
+                        fileURL = pdfFile.url;
+                        fileAttachments = [];
+                    }
+
+                    log.debug("fileURL", fileURL);
+
+                    let EMAIL_TEMPLATE = runtime.getCurrentScript().getParameter({name: SPARAM_EMAIL_TEMPLATE});
+                    let EMAIL_AUTHOR = runtime.getCurrentScript().getParameter({name: SPARAM_EMAILAUTHOR});
+
+                    if(EMAIL_TEMPLATE){
+                        let mergeResult = render.mergeEmail({
+                            templateId: EMAIL_TEMPLATE,
+                            transactionId: parseInt(reduceKey)
+                        });
+
+                        let mergeBody = mergeResult.body;
+                        if(fileURL != ""){
+                            mergeBody = mergeBody.replace("We appreciate your business and the opportunity to work with you. ","You may access your Invoice through this <a href = '"+fileURL+"'> link</a>. <br /> <br />We appreciate your business and the opportunity to work with you. ")
                         }
-            
-                        //Update date sent field:
-                        record.submitFields({
-                            type: record.Type.INVOICE,
-                            id: reduceKey,
-                            values: {
-                                'custbody_pdfemailsentdate' : (new Date()).toLocaleDateString(),
-                                'custbody_pdf_foremailsending': false,
-                                'custbody_nscs_high_vol_inv': false
-                            }
-                        });
-
-                        
-                        context.write({
-                            key: reduceKey,
-                            value: {
+                      
+                        log.debug("MergeBody", mergeBody)
+        
+                        email.send({
+                            author: EMAIL_AUTHOR,
+                            recipients: entityId,
+                            subject: mergeResult.subject,
+                            body:  mergeBody,
+                            attachments: fileAttachments,
+                            relatedRecords: {
                                 transactionId: reduceKey,
-                                transactionName: documentNumber,
-                                entityId: entityId,
-                                entityName: entityName,
-                                amount: amount,
-                                result: "SUCCESS"
-                            }
-                        });
-                        log.debug("Email Sent", "To Entity: " + entityId);
-                    }   
-                    else{
-                        record.submitFields({
-                            type: record.Type.INVOICE,
-                            id: reduceKey,
-                            values:{
-                                'custbody_pdf_foremailsending': false,
-                                'custbody_nscs_high_vol_inv': false
-                            }
-                        });
-                        context.write({
-                            key: reduceKey,
-                            value: {
-                                transactions: context.values,
-                                result: "ERROR: " + "No file found for this invoice.",
+                                entityId: entityId
                             }
                         });
                     }
-                }
-                else{
-                    //Update invoice record with PDF for email sending and is high volume invoice
+        
+                    //Update date sent field:
                     record.submitFields({
                         type: record.Type.INVOICE,
                         id: reduceKey,
-                        values:{
-                            'custbody_pdf_foremailsending': true,
-                            'custbody_nscs_high_vol_inv': true
+                        values: {
+                            'custbody_pdfemailsentdate' : (new Date()).toLocaleDateString(),
+                            'custbody_pdf_foremailsending': false,
+                            'custbody_nscs_high_vol_inv': false
                         }
                     });
-                    log.debug("Updated Invoice", reduceKey);
+
+                    
+                    context.write({
+                        key: reduceKey,
+                        value: {
+                            transactionId: reduceKey,
+                            transactionName: documentNumber,
+                            entityId: entityId,
+                            entityName: entityName,
+                            amount: amount,
+                            result: "SUCCESS"
+                        }
+                    });
+                    log.debug("Email Sent", "To Entity: " + entityId);
                 }
+               
             } catch (o_exception) {
                 log.error('Reduce Error', `${reduceKey}: Email not sent - ${o_exception.message}`);
                 context.write({
@@ -208,11 +193,8 @@
 
         function summarize(context) {
 
-            let PDF_CREATED = runtime.getCurrentScript().getParameter({name: SPARAM_PDFS_CREATED});
-            log.debug("PDF_CREATED", PDF_CREATED);
-
-            if(PDF_CREATED || PDF_CREATED == 'true'){
-                let logId = getLogId();
+         
+            let logId = getLogId();
                 log.audit("Log ID - Finish Log Record", logId);
 
                 let logRecord = record.load({
@@ -274,39 +256,6 @@
                     logRecord.setValue('custrecord_ctc_emailautomationlog_error', JSON.stringify(summarizeError.message));
                     logRecord.save({ignoreMandatoryFields: true});
                 }
-            }
-            else{
-
-                let scriptId = runtime.getCurrentScript().getParameter({name: SPARAM_SCRIPT});
-                let scriptDeployment = runtime.getCurrentScript().getParameter({name: SPARAM_SCRIPTDEPLOYMENT});
-                
-                //Call MR to create PDFs:
-                let mrTask = task.create({
-                    taskType: task.TaskType.MAP_REDUCE,
-                    scriptId: scriptId,
-                    deploymentId: scriptDeployment,
-                    params: {
-                        'custscript_called_by_invemail': true
-                    }
-                });
-
-                mrTask.submit();
-                log.debug("Called MR script to create PDFs");
-
-                let logId = getLogId();
-
-                //Get last ID: 
-
-                let logRecord = record.load({
-                    type: 'customrecord_ctc_emailsending_logs',
-                    id: logId,
-                    isDynamic: true
-                });
-
-                logRecord.setValue('custrecord_ctc_emailautomationlog_status', 'Generating Invoice PDFs');
-                let LOG_ID = logRecord.save({ignoreMandatoryFields: true});
-            }
-          
            
         }
 
