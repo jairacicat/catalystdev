@@ -126,7 +126,7 @@ define(
                     opportunity.setValue({ fieldId: 'entitystatus', value: entityStatus });
                     //Set Probabiloity field based on new Entity Status value
                     if (entityStatus == 43/*Solution Research*/) {
-                        opportunity.setValue({ fieldId: 'probability', value: 0 });
+                        opportunity.setValue({ fieldId: 'probability', value: 1 });
                     } else if (entityStatus == 16/*Closed-Lost*/) {
                         opportunity.setValue({ fieldId: 'probability', value: 0 });
                     } else if (entityStatus == 42/*Solution Development (Residual)*/) {
