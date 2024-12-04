@@ -21,11 +21,14 @@
  * 1.00         08-02-2024                  jaira@nscatalyst.com                    Initial Build
  * 2.00         08-19-2024                  jaira@nscatalyst.com                    Enable checkbox if both Rate and Amount are 0
  * 3.00         10-09-2024                  jaira@nscatalyst.com                    Unchecks lines on pageload if Rate&Amount are not 0
+ * 4.00         12-05-2024                  jaira@nscatalyst.com                    Add logic for copying address book to ship address
  *
  */
 
 define(['N/record', 'N/currentRecord'], function(record, currentRecord) {
     var FLD_DONOTPRINT = 'custcol_sti_do_not_print';
+    var FLD_ADDRESS_BOOK = 'custcol_ns_address_book';
+    var FLD_SHIP_TO = 'shipaddress';
 
     function pageInit(context){
         window.onbeforeunload = null;
@@ -87,6 +90,21 @@ define(['N/record', 'N/currentRecord'], function(record, currentRecord) {
                 });
                 rec.getSublistField({sublistId: 'item', fieldId: FLD_DONOTPRINT, line: context.line}).isDisabled = true;
             }
+        }
+
+        if(context.fieldId == FLD_ADDRESS_BOOK && context.sublistId == 'item'){
+            let addressBook = INVOICE.getCurrentSublistValue({
+                sublistId: 'item',
+                fieldId: FLD_ADDRESS_BOOK
+            });
+
+            INVOICE.setCurrentSublistValue({
+                sublistId: 'item',
+                fieldId: FLD_SHIP_TO,
+                value: addressBook
+            });
+
+            console.log("Ship To Set", addressBook);
         }
     }
 
