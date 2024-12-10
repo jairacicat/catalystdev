@@ -93,6 +93,7 @@ define(['N/record', 'N/currentRecord'], function(record, currentRecord) {
         }
 
         if(context.fieldId == FLD_ADDRESS_BOOK && context.sublistId == 'item'){
+            let INVOICE = context.currentRecord;
             let addressBook = INVOICE.getCurrentSublistValue({
                 sublistId: 'item',
                 fieldId: FLD_ADDRESS_BOOK

@@ -47,12 +47,11 @@ define(['N/search', 'N/url', 'N/runtime', 'N/file', 'N/record'],
                 URL_DOMAIN = getURLDomain();
                 log.debug("URL_DOMAIN", URL_DOMAIN);
 
-                let INVOICE_REC = record.load({
-                    type: record.Type.INVOICE,
-                    id: invoiceId
-                });
-
-                let invoiceAttachment = INVOICE_REC.getValue({fieldId: 'custbody_so_invoice_body_attachment'}).toLowerCase();
+                let invoiceAttachment = search.lookupFields({
+                    type: search.Type.INVOICE,
+                    id: invoiceId,
+                    columns: 'custbody_so_invoice_body_attachment'
+                }).custbody_so_invoice_body_attachment || "";
                 let invoiceAttachmentFlag = checkInvoiceAttachment(invoiceAttachment);
                 log.debug("Invoice Attachment field", invoiceAttachment);
                 log.debug("No detail found", invoiceAttachmentFlag)
