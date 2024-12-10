@@ -40,7 +40,7 @@ define(['N/record'],
                         invoiceDeliveryMethod = "";
                     }
 
-                    if(invoiceDeliveryMethod == "" || invoiceDeliveryMethod == null){
+                   // if(invoiceDeliveryMethod == "" || invoiceDeliveryMethod == null){
                         let billCountry = CUSTOMER.getValue({fieldId: 'billcountry'});
                         log.debug("BillCountry", billCountry);
 
@@ -56,7 +56,7 @@ define(['N/record'],
                                 value: VAL_EMAIL
                             });
                         }
-                    }
+                    //}
                 }
             } catch (o_exception) {
                 log.debug('catch', 'o_exception= ' + o_exception);
