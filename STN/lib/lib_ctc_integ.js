@@ -5,14 +5,14 @@
 
 
 
-define(['N/record', 'N/search', 'N/https', 'N/task', 'N/format', 'N/runtime', 'N/file', 'N/config', '../lib/moment-timezone-with-data.min.js', '../utils/appf_CommonUtils.js'], 
-function(record, search, https, task, format, runtime, file, config, moment, utils) {
+define(['N/record', 'N/search', 'N/https', 'N/task', 'N/format', 'N/runtime', 'N/file', 'N/config', 'N/encode', '../lib/moment-timezone-with-data.min.js', '../utils/ctc_CommonUtils.js'], 
+function(record, search, https, task, format, runtime, file, config, encode, moment, utils) {
 
     const MAPPING_SS_ID = 'customsearch_ctc_integ_mapping_ss'; // 	Appf - Integration Mapping Search (DNU - SCRIPT)
     const HEADER_SS_ID = 'customsearch_ctc_integ_header_ss'; // Appf - Integration Header Search (DNU - SCRIPT)
 
     const INTEG_CONN_CONFIG = {
-        ID: 'customrecord_ctc_integ_in_config',
+        ID: 'customrecord_ctc_integ_config',
         FIELDS: {
             ID: 'id',
             IS_TEST_MODE: 'custrecord_ctc_integ_config_is_test',
@@ -20,7 +20,9 @@ function(record, search, https, task, format, runtime, file, config, moment, uti
             SECRET_KEY: 'custrecord_ctc_integ_config_conn_key',
             TOKEN_URL: 'custrecord_ctc_integ_config_conn_tokurl',
             TOKEN: 'custrecord_ctc_integ_config_conn_token',
-            TOKEN_PREFIX: 'custrecord_ctc_integ_config_conn_prefix'
+            TOKEN_PREFIX: 'custrecord_ctc_integ_config_conn_prefix',
+            USER: 'custrecord_ctc_integ_config_conn_usernam',
+            PASS: 'custrecord_ctc_integ_config_conn_pass'
         }
     }
 
@@ -62,10 +64,10 @@ function(record, search, https, task, format, runtime, file, config, moment, uti
         ID: 'customrecord_ctc_integ_headerbody',
         FIELDS: {
             ID: 'id',
-            RECORD_CONFIG: 'custrecord_integ_header_parentconfig',
-            PROPERTY_NAME: 'custrecord_integ_header_property',
-            VALUE: 'custrecord_integ_header_value',
-            IS_BODY: 'custrecord_integ_header_isbody'
+            RECORD_CONFIG: 'custrecord_ctc_integ_header_parentconfig',
+            PROPERTY_NAME: 'custrecord_ctc_integ_header_property',
+            VALUE: 'custrecord_ctc_integ_header_value',
+            IS_BODY: 'custrecord_ctc_integ_header_isbody'
         }
     }
 
@@ -118,6 +120,12 @@ function(record, search, https, task, format, runtime, file, config, moment, uti
 
     const RECORD_LINK = '<a href="$URI"> Record Link </a>';
 
+    const STATUS_MAP = {
+        "3" : 2,     // In Progress,
+        "10001" : 1, // Closed - Done,
+        "10046" : 1 // Closed - Declined
+    }
+
     let libObj = {};
 
     libObj.getSavedSearchResultCount = (ssId) => {
@@ -138,9 +146,24 @@ function(record, search, https, task, format, runtime, file, config, moment, uti
 
     libObj.getHeader = (connObj) => {
         if (!utils.isEmpty(connObj)) {
+
+            var credentials = connObj.USER + ':' + connObj.PASS;
+            log.debug("Credentials", credentials);
+            var encodedCredentials = encode.convert({
+                string: credentials,
+                inputEncoding: encode.Encoding.UTF_8,
+                outputEncoding: encode.Encoding.BASE_64
+            });
+            log.debug("Encoded Credentials", encodedCredentials);
+            token = "Basic " + encodedCredentials;
+
+            log.debug("Get Header - token", token);
+
             return {
-                'Content-Type': 'application/json',
-                'Authorization': connObj.TOKEN
+                "Accept" : "*/*",
+                "Accept-Encoding" : "gzip, deflate, br",
+                'Authorization': token,
+                'Content-Type': 'application/json'
             }
         }
     }
@@ -223,10 +246,10 @@ function(record, search, https, task, format, runtime, file, config, moment, uti
             let bodyObj = {};
             let recordRequest = [];
 
-            let subsidiaryList = libObj.getExternalId(recObj.SUBSIDIARY, 'subsidiary', 'custrecord_ctc_subsidiary');
-            log.debug('fetchData', 'subsidiaryList: ' + JSON.stringify(subsidiaryList));
+            //let subsidiaryList = libObj.getExternalId(recObj.SUBSIDIARY, 'subsidiary', 'custrecord_ctc_subsidiary');
+            //log.debug('fetchData', 'subsidiaryList: ' + JSON.stringify(subsidiaryList));
 
-            // bodyObj.companyid = subsidiaryList;
+            //bodyObj.companyid = subsidiaryList;
             // bodyObj.companyid = '63';
 
             let dateToday = new Date();
@@ -250,24 +273,33 @@ function(record, search, https, task, format, runtime, file, config, moment, uti
                 bodyObj.end_date = "";
             }
             // krivera - 04172024: Append date filter
-            endpoint += bodyObj.start_date;
+            //endpoint += bodyObj.start_date;
 
-            //jcicat - 03182024: Handling TrueNet response pagination
-            let hasMore = true;
             let payLoadArray = [];
-            subsidiaryList.forEach(subId => {
-                bodyObj.companyid = subId;
-                log.debug('fetchData', 'bodyObj: ' + JSON.stringify(bodyObj));
-               
-                while(hasMore && !utils.isEmpty(endpoint)){
-                    log.debug('endpoint - inside while', endpoint);
-                    let getRequest = https.get({
-                        url: endpoint,
-                        // body: JSON.stringify(bodyObj),
-                        headers: headersObj
-                    });
+        
+            let getRequest = https.get({
+                url: endpoint,
+                // body: JSON.stringify(bodyObj),
+                headers: headersObj
+            });
 
-                    let responseBody = JSON.parse(getRequest.body);
+            let responseBody = JSON.parse(getRequest.body);
+            let startAt = 0; 
+           
+            while(startAt < responseBody.total && !utils.isEmpty(endpoint)){
+                    log.debug("StartAt", startAt);
+
+                    if(startAt != 0){
+                        log.debug("endpoint ", endpoint +"&startAt="+startAt );
+                        getRequest = https.get({
+                            url: endpoint + "&startAt="+startAt,
+                            // body: JSON.stringify(bodyObj),
+                            headers: headersObj
+                        });
+                        responseBody = JSON.parse(getRequest.body);
+                    }
+                    log.debug('getRequest - body', getRequest.body);
+                    
                     if (getRequest.code != 200) {
                         let errMsg = 'Connection FAILED.';
                         libObj.createLog({
@@ -280,26 +312,16 @@ function(record, search, https, task, format, runtime, file, config, moment, uti
                         log.error('Response Error: ', errMsg);
                     } else {
                         let sucMsg = 'Connection SUCCESSFUL.';
-                        payLoadArray = payLoadArray.concat(responseBody.items);
-                        hasMore = responseBody.hasMore;
-                        if(hasMore){
-                            endpoint = libObj.getNextHref(responseBody.links);
-                            log.debug("next endpoint", endpoint);
+                        payLoadArray = payLoadArray.concat(responseBody.issues);
+                        if(startAt < responseBody.total){
+                            startAt += 100;
                         }
                         if(utils.isEmpty(endpoint)){
                             break;
                         }
-                        // libObj.createLog({
-                        //     configid: recObj.ID,
-                        //     doculink: '',
-                        //     reclink: '',
-                        //     haserror: false,
-                        //     response: sucMsg
-                        // });
-                        // log.audit('Response: ', sucMsg);
                     }
                 }
-                //let simplePayloadArray = [payLoadArray[0]];
+                let simplePayloadArray = [payLoadArray[0]];
                 //log.debug('fetchData', 'responseBody: ' + JSON.stringify(simplePayloadArray));
                 //log.debug('fetchData', 'responseBody: ' + JSON.stringify(payLoadArray));
                 
@@ -313,7 +335,7 @@ function(record, search, https, task, format, runtime, file, config, moment, uti
                     //code: getRequest.code,
                     file: fileId
                 })
-            });
+            //});
 
             log.debug('fetchData', 'recordRequest: ' + JSON.stringify(recordRequest));
             return JSON.stringify(recordRequest);
@@ -379,7 +401,7 @@ function(record, search, https, task, format, runtime, file, config, moment, uti
 
                 let mrTask = task.create({
                     taskType: task.TaskType.MAP_REDUCE,
-                    scriptId: 'customscript_ctc_sc_integ_mapping',
+                    scriptId: 'customscript_ctc_mr_integ_data_mapping',
                     params: {
                         'custscript_ctc_integ_map_fileid': fileId,
                         'custscript_ctc_integ_map_config': recObj.ID
@@ -387,8 +409,8 @@ function(record, search, https, task, format, runtime, file, config, moment, uti
                });
 
                 try {
-                    let taskId = mrTask.submit();
-                    log.debug({title: 'INBOUND Task: ', details: taskId});
+                    //let taskId = mrTask.submit();
+                    //log.debug({title: 'INBOUND Task: ', details: taskId});
 
                     return fileId;
 
@@ -545,7 +567,7 @@ function(record, search, https, task, format, runtime, file, config, moment, uti
         let recordType = recordConfigObj.RECORD_TYPE;
 
         let mappingArr = utils.allColumnsSearch(MAPPING_SS_ID, mappingFilterArr, null, false);
-        log.debug('mappingArr:', JSON.stringify(mappingArr));
+        //log.debug('mappingArr:', JSON.stringify(mappingArr));
 
         // Loop through each mapping field.
         mappingArr.forEach(mapping => {
@@ -582,127 +604,149 @@ function(record, search, https, task, format, runtime, file, config, moment, uti
             }
 
             if (mapField.includes('.') || !utils.isEmpty(sublistId)) { // Sublist
+                //JAIRA TO DO   
                 if (mapField.includes('.')) { // ex: item.quantity
+                    
                     let keyArr = mapField.split('.'); // ex: [item, quantity]
-                    let sublistKey = keyArr[0]; // ex: item
-                    let fieldKey = keyArr[1]; // ex: quantity
-                    log.debug('keyArr:', JSON.stringify(keyArr));
-                    log.debug('sublistKey:', JSON.stringify(sublistKey));
-                    log.debug('fieldKey:', JSON.stringify(fieldKey));
-                    log.debug('value:', JSON.stringify(payload[sublistKey]));
 
-                    let lookupIdsArr = [];
-                    let lookupResultArr = [];
-                    // try {
-                        sublistObj = typeof payload[sublistKey] == 'string' ? JSON.parse(payload[sublistKey]) : payload[sublistKey];
-                        // Non-array ex: sublistObj = { quantity : 2 }
-                        // Array ex: sublistObj = [{ quantity : 2, rate: 5 },{ quantity : 5, rate: 10 }]
-    
-                        log.debug('sublistObj:', JSON.stringify(sublistObj));
-                        log.debug('isLookup:', isLookUp);
-                        // Non-array
-                        if (!Array.isArray(sublistObj)) {
-                            fieldValue = sublistObj[keyArr[1]]; // ex: fieldValue = 2
-                        } else {
-                            if (!recordObj.hasOwnProperty(sublistId)) {
-                                recordObj[sublistId] = [];
-                                sublistObj.forEach(line => { // loop through payload sublist
-                                    recordObj[sublistId].push({});
-                                });
+                    if(keyArr.length > 2){
+                        if(mapField.indexOf("status") > -1){
+                            recordObj[fieldId] = STATUS_MAP[payload.fields.status.id]
+                        }
+                        if(isLookUp){
+                            let tempvalue = payload[mapField];
+                            log.debug("isLookup & tempvalue", tempvalue);
+
+                            if(tempvalue){
+                                
                             }
+                        }
+                    }
+                    else{
+                        let sublistKey = keyArr[0]; // ex: item
+                        let fieldKey = keyArr[1]; // ex: quantity
+                        log.debug('keyArr:', JSON.stringify(keyArr));
+                        log.debug('sublistKey:', JSON.stringify(sublistKey));
+                        log.debug('fieldKey:', JSON.stringify(fieldKey));
+                        log.debug('value:', JSON.stringify(payload[sublistKey]));
 
-                            if (isLookUp) {
+                        let lookupIdsArr = [];
+                        let lookupResultArr = [];
+                        // try {
+                            sublistObj = typeof payload[sublistKey] == 'string' ? JSON.parse(payload[sublistKey]) : payload[sublistKey];
+                            // Non-array ex: sublistObj = { quantity : 2 }
+                            // Array ex: sublistObj = [{ quantity : 2, rate: 5 },{ quantity : 5, rate: 10 }]
+        
+                            log.debug('sublistObj:', JSON.stringify(sublistObj));
+                            log.debug('isLookup:', isLookUp);
+                            // Non-array
+                            if (!Array.isArray(sublistObj) || (Array.isArray(sublistObj) && typeof sublistObj[0] == 'string')) {
+                                fieldValue = sublistObj[keyArr[1]]; // ex: fieldValue = 2
+                                log.debug("MAPPING -- with .", fieldValue);
+                                recordObj[fieldId] = fieldValue.toString();
+                            } else {
+                                if (!recordObj.hasOwnProperty(sublistId)) {
+                                    recordObj[sublistId] = [];
+                                    sublistObj.forEach(line => { // loop through payload sublist
+                                        recordObj[sublistId].push({});
+                                    });
+                                }
+
+                                if (isLookUp) {
+                                    sublistObj.forEach((line, idx) => { // loop through payload sublist, ex: sublistObj = [{ quantity : 2, rate: 5 },{ quantity : 5, rate: 10 }]
+                                        for (const key in line) { // loop through each property of payload sublist, ex: quantity : 2, rate: 5
+                                            if (Object.hasOwnProperty.call(line, key)) {
+                                                const element = line[key];
+                                                if (key == fieldKey) {
+                                                    // log.debug('sublistObj element:', JSON.stringify({
+                                                    //     element: element,
+                                                    //     key: key
+                                                    // }));
+                                                    lookupIdsArr.push(element);
+                                                    lookupResultArr.push({
+                                                        orig: element,
+                                                        line: idx
+                                                    })
+                                                }
+                                                
+                                            }
+                                        }
+                                    });
+
+                                    lookupResultArr = libObj.getSublistLookUpValue(lookupResultArr, lookupIdsArr, recType, lookUpField, lookupOperator, lookUpGetValue);
+                                    log.debug('lookupResultArr:', JSON.stringify(lookupResultArr));
+                                }                            
+
                                 sublistObj.forEach((line, idx) => { // loop through payload sublist, ex: sublistObj = [{ quantity : 2, rate: 5 },{ quantity : 5, rate: 10 }]
                                     for (const key in line) { // loop through each property of payload sublist, ex: quantity : 2, rate: 5
                                         if (Object.hasOwnProperty.call(line, key)) {
                                             const element = line[key];
+
+                                            // log.debug('sublistObj:', JSON.stringify({
+                                            //     key: key,
+                                            //     fieldKey: fieldKey
+                                            // }));
+
                                             if (key == fieldKey) {
-                                                // log.debug('sublistObj element:', JSON.stringify({
-                                                //     element: element,
-                                                //     key: key
-                                                // }));
-                                                lookupIdsArr.push(element);
-                                                lookupResultArr.push({
-                                                    orig: element,
-                                                    line: idx
-                                                })
+                                                if (isLookUp) {
+                                                    log.debug('sublistObj element:', JSON.stringify({
+                                                        element: element,
+                                                        key: key,
+                                                        lookup:  lookupResultArr
+                                                    }));
+                                                    
+                                                    let valueIdx = lookupResultArr.findIndex((data) => data.line == idx);
+
+                                                    recordObj[sublistId][idx][fieldId] = lookupResultArr[valueIdx]['key'];
+                                                } else {
+                                                    log.debug('sublistObj:', JSON.stringify({
+                                                        key: key,
+                                                        fieldKey: fieldKey
+                                                    }));
+                                                    log.debug("Element", element);
+                                                    recordObj[sublistId][idx][fieldId] = element;
+                                                }
+                                                
+                                                fieldValue = '';
                                             }
                                             
                                         }
                                     }
                                 });
+                                
+                            }
+                        // } catch (e) {
+                        //     log.debug('Mapping Error:', JSON.stringify(e));
+                        //     // Empty value if has mapping error
+                        //     fieldValue = '';
+                        // }
+        
+                        let newKey = keyArr[0];
 
-                                lookupResultArr = libObj.getSublistLookUpValue(lookupResultArr, lookupIdsArr, recType, lookUpField, lookupOperator, lookUpGetValue);
-                                log.debug('lookupResultArr:', JSON.stringify(lookupResultArr));
-                            }                            
-
-                            sublistObj.forEach((line, idx) => { // loop through payload sublist, ex: sublistObj = [{ quantity : 2, rate: 5 },{ quantity : 5, rate: 10 }]
-                                for (const key in line) { // loop through each property of payload sublist, ex: quantity : 2, rate: 5
-                                    if (Object.hasOwnProperty.call(line, key)) {
-                                        const element = line[key];
-
-                                        // log.debug('sublistObj:', JSON.stringify({
-                                        //     key: key,
-                                        //     fieldKey: fieldKey
-                                        // }));
-
-                                        if (key == fieldKey) {
-                                            if (isLookUp) {
-                                                log.debug('sublistObj element:', JSON.stringify({
-                                                    element: element,
-                                                    key: key,
-                                                    lookup:  lookupResultArr
-                                                }));
-                                                
-                                                let valueIdx = lookupResultArr.findIndex((data) => data.line == idx);
-
-                                                recordObj[sublistId][idx][fieldId] = lookupResultArr[valueIdx]['key'];
-                                            } else {
-                                                log.debug('sublistObj:', JSON.stringify({
-                                                    key: key,
-                                                    fieldKey: fieldKey
-                                                }));
-                                                recordObj[sublistId][idx][fieldId] = element;
-                                            }
-                                            
-                                            fieldValue = '';
-                                        }
-                                        
-                                    }
-                                }
-                            });
-                        }
-                    // } catch (e) {
-                    //     log.debug('Mapping Error:', JSON.stringify(e));
-                    //     // Empty value if has mapping error
-                    //     fieldValue = '';
-                    // }
-    
-                    let newKey = keyArr[0];
-
-                    if (sublistId != '') {
-                        newKey = sublistId;
-                        if (subrecordId != '') {
-                            newKey += '.' + subrecordId;
-                        }
-                    }
-    
-                    isAddress = sublistId.includes('address');
-                    if (isAddress) {
-                        // ADDRESSBOOK
-                        if (!recordObj.hasOwnProperty(newKey)) {
-                            recordObj[newKey] = [];
-                            recordObj[newKey].push({}); // Shipping
-                            recordObj[newKey].push({}); // Billing
+                        if (sublistId != '') {
+                            newKey = sublistId;
+                            if (subrecordId != '') {
+                                newKey += '.' + subrecordId;
+                            }
                         }
         
-                        if (keyArr[0].includes('billing')) {
-                            recordObj[newKey][1][fieldId] = fieldValue;
-                        } else {
-                            recordObj[newKey][0][fieldId] = fieldValue;
-                        }
-                        // ADDRESSBOOK END
-                    } 
+                        isAddress = sublistId.includes('address');
+                        if (isAddress) {
+                            // ADDRESSBOOK
+                            if (!recordObj.hasOwnProperty(newKey)) {
+                                recordObj[newKey] = [];
+                                recordObj[newKey].push({}); // Shipping
+                                recordObj[newKey].push({}); // Billing
+                            }
+            
+                            if (keyArr[0].includes('billing')) {
+                                recordObj[newKey][1][fieldId] = fieldValue;
+                            } else {
+                                recordObj[newKey][0][fieldId] = fieldValue;
+                            }
+                            // ADDRESSBOOK END
+                        } 
+                    }
                 } else {
                     log.debug('sublist fieldId:', JSON.stringify(fieldId));
                     log.debug('sublist id:', JSON.stringify(sublistId));
@@ -745,6 +789,7 @@ function(record, search, https, task, format, runtime, file, config, moment, uti
                 recordObj[fieldId] = fieldValue;
             } else {
                 fieldValue = payload[mapField] || '';
+
                 recordObj[fieldId] = fieldValue;
             }
 
@@ -794,6 +839,9 @@ function(record, search, https, task, format, runtime, file, config, moment, uti
                     recType = recordLookUpType
                 }
 
+                log.debug("mapField", mapField);
+                fieldValue = libObj.getNestedValue(payload, mapField);
+                log.debug("Before getLookupValue", fieldValue);
                 lookUpValue = libObj.getLookUpValue(recType, lookUpField, lookupOperator, lookUpGetValue, fieldValue, false);
                
                 // log.debug('isLookUp internalid:', JSON.stringify(internalId));
@@ -810,6 +858,7 @@ function(record, search, https, task, format, runtime, file, config, moment, uti
                     recordObj[fieldId] = fieldValue;
                 }
             }
+         
 
             log.debug('Mapping:', JSON.stringify({
                 field: mapField,
@@ -1069,7 +1118,7 @@ function(record, search, https, task, format, runtime, file, config, moment, uti
                 if (typeof value != 'object') {
                     let isDate = libObj.validateDate(value);
 
-                    log.debug('setFields isDate: ', isDate);
+                    //log.debug('setFields isDate: ', isDate);
 
                     if (isDate) {
                         let date = new Date(value);
@@ -1436,6 +1485,10 @@ function(record, search, https, task, format, runtime, file, config, moment, uti
         });
 
         return companyInfo.getValue({ fieldId : 'timezone' });
+    }
+
+    libObj.getNestedValue = (obj, path) => {
+        return path.split('.').reduce((acc, key) => acc && acc[key], obj);
     }
 
     return libObj;

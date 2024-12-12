@@ -46,6 +46,8 @@
             }
             log.debug("Run Script", runScript);
 
+            let isValidSecret = initConfigObj.TOKEN != "" ? true : false;
+            /*
             let isValidSecret = false;
             if(initConfigObj.TOKEN == ""){
                 lib.generateNewSecret(initConfigObj);
@@ -63,13 +65,15 @@
                     log.debug("Token re-generated");
                 }
             }
+            */
           
+            configObj = utils.getRecordObj(configId, CONN_CONFIG.ID, CONN_CONFIG.FIELDS, true);
             log.debug(SCRIPT_FILE_NAME, 'isValidSecret: ' + isValidSecret);
             
             if (isValidSecret) {
                 log.debug(SCRIPT_FILE_NAME, 'configObj: ' + JSON.stringify(configObj));
                 
-                if (recordConfigObj.DIRECTION == 1) { // INBOUND 
+                if (recordConfigObj.DIRECTION == "Inbound") { // INBOUND 
                     let postData = lib.fetchData(recordConfigObj, configObj);
                     log.debug(SCRIPT_FILE_NAME, JSON.stringify(postData));
                     
@@ -78,6 +82,7 @@
                 }
             } else {
                 let errMsg = 'Invalid Credentials!';
+                /*
                 lib.createLog({
                     configid: recordConfigObj.ID,
                     doculink: '',
@@ -85,10 +90,12 @@
                     haserror: true,
                     response: errMsg
                 });
+                */
                 log.error('Request: ', errMsg);
             }
         } catch(e) {
             let errMsg = 'Integration Error at the beginning! Error: ' + e;
+            /*
             lib.createLog({
                 configid: '',
                 doculink: '',
@@ -96,6 +103,7 @@
                 haserror: true,
                 response: errMsg
             });
+            */
             log.error('Integration Start: ', errMsg);
         }
         log.audit(SCRIPT_FILE_NAME, '<--- END --->');
