@@ -409,8 +409,8 @@ function(record, search, https, task, format, runtime, file, config, encode, mom
                });
 
                 try {
-                    //let taskId = mrTask.submit();
-                    //log.debug({title: 'INBOUND Task: ', details: taskId});
+                    let taskId = mrTask.submit();
+                    log.debug({title: 'INBOUND Task: ', details: taskId});
 
                     return fileId;
 
