@@ -126,10 +126,40 @@ define(['N/record', 'N/currentRecord'], function(record, currentRecord) {
         }
     }
     
+    function validateLine(context){
+        console.log("validateLIne", context.sublistId);
+        if(context.sublistId == 'item'){
+            let INVOICE = context.currentRecord;
+            let addressBook = INVOICE.getCurrentSublistValue({
+                sublistId: 'item',
+                fieldId: FLD_ADDRESS_BOOK
+            });
+
+            let shipTo = INVOICE.getCurrentSublistValue({
+                sublistId: 'item',
+                fieldId: FLD_ADDRESS_BOOK
+            });
+
+            console.log("addressBook", addressBook);
+            console.log("shipTo", shipTo)
+
+            if(addressBook != "" && (shipTo == "" || shipTo == null)){
+                INVOICE.setCurrentSublistValue({
+                    sublistId: 'item',
+                    fieldId: FLD_SHIP_TO,
+                    value: addressBook
+                });
+                console.log("Ship To Set", addressBook);
+            }
+            return true;
+        }
+        return true;
+    }
 
     return {
         fieldChanged: fieldChanged,
         lineInit: lineInit,
+        validateLine: validateLine
         //pageInit: pageInit
     };
 });
