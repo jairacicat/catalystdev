@@ -69,7 +69,7 @@ define(['N/currentRecord','N/url'],
                     params: {'custparam_custid':customerId}
                 });
                 console.log(stLogTitle + ' >>>> ' + suiteletURL);
-                window.open(suiteletURL, "_self");
+                window.open(suiteletURL, "_blank");
             } catch (err) {
                 console.log(stLogTitle + ' >>>> ' + err.toString());
             }

@@ -153,7 +153,7 @@
     <body header="nlheader" header-height="80" footer="nlfooter" footer-height="25" padding="0.5in 0.5in 0.5in 0.5in" size="Letter">
 
     <img src="https://7493949.app.netsuite.com/core/media/media.nl?id=4978&amp;c=7493949&amp;h=7WRkeVQ5qrUJHL7VGMwONcD8OUG3dQc_s3iXiKAHJRZ9Eofq&amp;fcts=20220125155108&amp;whence=" style="width: 200px; height: 57px;" />
-
+  
     <table style="width: 100%; margin-top: 25px;">
 
         <tr>
@@ -168,6 +168,10 @@
         <#assign escape_custname = cust_name?replace('&', '&amp;')>
         <tr>
             <td><b>CUST #:</b> ${custInfo.values.entityid}</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td><b>RETAINER #: </b> ${ds.retainer.retainerName}</td>
             <td>&nbsp;</td>
         </tr>
         <tr>
@@ -192,6 +196,10 @@
     <tr>
         <td><b> CUST #: </b></td>
         <td>&nbsp;</td>
+    </tr>    
+    <tr>
+        <td><b> RETAINER #: </b></td>
+        <td>${ds.retainer.retName}</td>
     </tr>
     <tr>
         <td><b> ATTN: </b> <br />
@@ -221,6 +229,11 @@
             <td colspan="16"></td>
             <td colspan="5"></td>
         </tr>
+        <tr>
+            <td colspan="7">${ds.retainer.retainerStart}</td>
+            <td colspan="16">BEGINNING BALANCE</td>
+            <td colspan="5">${nsformat_currency(ds.retainer.retainerBudget)}</td>
+        </tr>
 
         <!--tr>
             <td colspan="7" style="text-align: left;"><b>RETAINER BALANCE AT</b></td>
@@ -238,6 +251,7 @@
 
 
         <#if ds.invobj?has_content>
+        
         <#list ds.invobj as inv>
         <tr>
             <td colspan="7"  style="text-align: left;">${inv.trandate}</td>

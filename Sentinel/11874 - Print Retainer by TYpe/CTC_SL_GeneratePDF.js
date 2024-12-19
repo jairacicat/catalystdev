@@ -28,8 +28,8 @@
     //var retainerItem = ['99047', '99196', '99195'] //Retainer - NetSuite (sb)
 var retainerItem = ['118568', '284603', '284604', '71668', '127208']
 define(['N/file', 'N/render', 'N/search', 'N/log', 'N/redirect', 'N/record',
-        'N/config'],
-    function (file, render, search, log, redirect, record, config) {
+        'N/config', 'N/ui/serverWidget'],
+    function (file, render, search, log, redirect, record, config, serverWidget) {
 
         function onRequest(context) {
             var stLogTitle = 'Generate PDF Suitelet';
@@ -55,16 +55,64 @@ define(['N/file', 'N/render', 'N/search', 'N/log', 'N/redirect', 'N/record',
                 id: 'Images/' + logo
             });
 
-            if (context.request.method == 'GET') {
+            if (request.method === 'GET') {
+                // Create the form
+                var form = serverWidget.createForm({
+                    title: 'Select Customer Retainer'
+                });
+    
+                // Dropdown Field for Retainers
+                var retainerDropdown = form.addField({
+                    id: 'custpage_retainer_dropdown',
+                    type: serverWidget.FieldType.SELECT,
+                    label: 'Select Retainer'
+                });
+
+                var customerID = form.addField({
+                    id: 'custpage_customerid',
+                    type: serverWidget.FieldType.TEXT,
+                    label: 'CUSTOMER'
+                });
+                customerID.defaultValue = custId;
+                customerID.updateDisplayType({
+                    displayType: serverWidget.FieldDisplayType.HIDDEN
+                })
+    
+                retainerDropdown.isMandatory = true;
+    
+                // Populate the dropdown with Retainer Transactions
+                var retainers = getCustomerRetainers(custId);
+                retainerDropdown.addSelectOption({
+                    value: '',
+                    text: '-- Select Retainer --'
+                });
+    
+                retainers.forEach(function(retainer) {
+                    retainerDropdown.addSelectOption({
+                        value: retainer.id,
+                        text: retainer.name
+                    });
+                });
+    
+                // Submit Button
+                form.addSubmitButton({
+                    label: 'Print Retainer Statement'
+                });
+    
+                response.writePage(form);
+    
+            } else if (request.method === 'POST') {
+                var custId = request.parameters.custpage_customerid;
+                var retainerId = request.parameters.custpage_retainer_dropdown;
                 var custobj = getCustomerInfo(custId);
-                var invoiceResult = getInvoices(custId);
+                var invoiceResult = getInvoices(custId, retainerId);
                 var creditMemoResult = getCreditMemo(custId);
                 var today = new Date();
                 var dd = today.getDate();
                 var mm = today.getMonth() + 1;
                 var yyyy = today.getFullYear();
                 today = mm + '/' + dd + '/' + yyyy;
-                var retainerobj = getOpenRetainerDetails(custId);
+                var retainerobj = getOpenRetainerDetails(custId, retainerId);
 
                 datasource = {
                     logo: clogo.url,
@@ -87,9 +135,43 @@ define(['N/file', 'N/render', 'N/search', 'N/log', 'N/redirect', 'N/record',
                     value: 'inline; filename="' + retainerReport.fileName + '"'
                 });
                 context.response.writeFile(retainerReport.file);
-
             }
 
+        }
+
+        /**
+         * Function to get the customer's retainers.
+         * @param {string} customerId - The customer ID.
+         * @returns {Array} List of retainer transactions.
+         */
+        function getCustomerRetainers(customerId) {
+            var results = [];
+
+            // Search for Retainer Transactions related to the customer
+            var retainerSearch = search.create({
+                type: 'customrecord_ctc_retainer',
+                filters: [
+                    ['custrecord_ctc_rtnr_customer_ref', 'anyof', customerId],
+                    'AND',
+                    ['isinactive', 'is', 'F'],
+                    'AND',
+                    ['custrecord_ctc_rtnr_status', 'anyof', ['1','2']]
+                ],
+                columns: ['internalid', 'name']
+            });
+
+            var pagedData = retainerSearch.runPaged({ pageSize: 1000 });
+            pagedData.pageRanges.forEach(function(pageRange) {
+                var page = pagedData.fetch({ index: pageRange.index });
+                page.data.forEach(function(result) {
+                    results.push({
+                        id: result.getValue('internalid'),
+                        name: result.getValue('name')
+                    });
+                });
+            });
+
+            return results;
         }
 
         function renderPDF(htmlTemplate, datasource, response, custId) {
@@ -172,7 +254,7 @@ define(['N/file', 'N/render', 'N/search', 'N/log', 'N/redirect', 'N/record',
             return custObj;
         }
 
-        function getInvoices(custId) {
+        function getInvoices(custId, retainerId) {
             var stLogTitle = 'getInvoices';
             var invoiceResult = null;
             var invoiceArray = [];
@@ -187,8 +269,8 @@ define(['N/file', 'N/render', 'N/search', 'N/log', 'N/redirect', 'N/record',
                                     "AND", ["status","noneof","CustInvc:V"],
                                     "AND", ["customermain.internalid", "anyof", custId],
                                     "AND", ["item", "anyof", retainerItem],
-                                    "AND", [["custbody_ctc_rtnr_inv_retainer", "noneof", "@NONE@"],
-                                        "OR", ["custbody_ctc_rtnr_so_retainer", "noneof", "@NONE@"]]]]
+                                    "AND", [["custbody_ctc_rtnr_inv_retainer", "anyof", retainerId],
+                                        "OR", ["custbody_ctc_rtnr_so_retainer", "anyof", retainerId]]]]
                             ],
                         columns:
                             [
@@ -383,7 +465,7 @@ define(['N/file', 'N/render', 'N/search', 'N/log', 'N/redirect', 'N/record',
 
         }
 
-        function getOpenRetainerDetails(custId) {
+        function getOpenRetainerDetails(custId, retainerId) {
             var stLogTitle = 'getOpenRetainerDetails';
             var retainerResult;
             var retainerObj = {
@@ -405,6 +487,10 @@ define(['N/file', 'N/render', 'N/search', 'N/log', 'N/redirect', 'N/record',
                             name: 'custrecord_ctc_rtnr_status',
                             operator: search.Operator.ANYOF,
                             values: ['1', '2']  // Open or partially used
+                        }), search.createFilter({
+                            name: 'internalid',
+                            operator: search.Operator.ANYOF,
+                            values: retainerId
                         })],
                         columns: ['internalid', 'name', 'custrecord_ctc_rtnr_total_budget', 'custrecord_ctc_rtnr_start_date', 'custrecord_ctc_rtnr_end_date', 'custrecord_ctc_rtnr_type'] //ALI
                     });
@@ -426,12 +512,14 @@ define(['N/file', 'N/render', 'N/search', 'N/log', 'N/redirect', 'N/record',
                             var endDate = retainerResult[i].getValue({name: 'custrecord_ctc_rtnr_end_date'});
                             var totalBudget = retainerResult[i].getValue({name: 'custrecord_ctc_rtnr_total_budget'});
                             var retainerType = retainerResult[i].getText({name: 'custrecord_ctc_rtnr_type'}); //ALI
+                            var retainerDateCreated = retainerResult[i].getValue({name: 'created'});
                             log.debug(retainerResult[i], 'retName: ' + retName + ' -startDate:' + startDate + ' - endDate: ' + endDate + ' - custrecord_ctc_rtnr_total_budget:' + totalBudget + ' - retainerType:' + retainerType);
                             retainerObj = {
                                 'retainerStart': startDate,
                                 'retainerEnd': endDate,
                                 'retainerBudget': totalBudget,
-                                'retainerType': retainerType //ALI
+                                'retainerType': retainerType, //ALI
+                                'retainerName': retName
                             }
                         }
                     }
@@ -448,6 +536,59 @@ define(['N/file', 'N/render', 'N/search', 'N/log', 'N/redirect', 'N/record',
 
             }
 
+        }
+
+        function getRetainerBeginningBudget(retainerId){
+            var customrecord_ctc_retainerSearchObj = search.create({
+                type: "customrecord_ctc_retainer",
+                filters:
+                [
+                   ["internalidnumber","equalto", retainerId], 
+                   "AND", 
+                   ["systemnotes.type","is","F"], 
+                   "AND", 
+                   ["systemnotes.field","anyof","CUSTRECORD_CTC_RTNR_TOTAL_BUDGET"]
+                ],
+                columns:
+                [
+                   search.createColumn({
+                      name: "field",
+                      join: "systemNotes",
+                      summary: "GROUP"
+                   }),
+                   search.createColumn({
+                      name: "oldvalue",
+                      join: "systemNotes",
+                      summary: "GROUP"
+                   }),
+                   search.createColumn({
+                      name: "date",
+                      join: "systemNotes",
+                      summary: "MIN"
+                   }),
+                   search.createColumn({
+                      name: "created",
+                      summary: "GROUP"
+                   }),
+                   search.createColumn({
+                    name: "formulatext",
+                    summary: "MAX",
+                    formula: "case when {created} < {systemnotes.date} then 1 else 0 end",
+                    label: "Formula (Text)"
+                    })
+                ]
+             });
+            
+             var beginningBudget = 0;
+
+             customrecord_ctc_retainerSearchObj.run().each(function(result){
+                if(result.getValue({name: 'formulatext', summary: "MAX"}) != 1){
+                    beginningBudget = result.getValue({name: 'oldvalue', join: "systemNotes", summary: "GROUP"});
+                }
+                return false;
+             });
+             
+            return beginningBudget;
         }
 
         function isEmpty(stValue) {
