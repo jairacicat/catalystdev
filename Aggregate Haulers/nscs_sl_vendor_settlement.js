@@ -1,21 +1,28 @@
 /**
  * @NApiVersion 2.1
- * @NScriptType Suitelet
+ * @NScriptType ScheduledScript
  */
-define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime', 'N/search', 'N/ui/serverWidget','N/config'],
+define(['N/config', 'N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime', 'N/search'],
     /**
-     * @param{file} file
-     * @param{format} format
-     * @param{record} record
-     * @param{redirect} redirect
-     * @param{render} render
-     * @param{runtime} runtime
-     * @param{search} search
-     * @param{serverWidget} serverWidget
-     * @param{config} config
-     */
-    function(file, format, record, redirect, render, runtime, search,serverWidget,config) {
-        function ytdValues(recID,weekofDate,payDate,driverData,formatWeek){
+ * @param{config} config
+ * @param{file} file
+ * @param{format} format
+ * @param{record} record
+ * @param{redirect} redirect
+ * @param{render} render
+ * @param{runtime} runtime
+ * @param{search} search
+ */
+    (config, file, format, record, redirect, render, runtime, search) => {
+        function formatDate(dateValue){
+            var newDate = ((dateValue.getMonth() > 8) ? (dateValue.getMonth() + 1) : ('0' + (dateValue.getMonth() + 1))) + '/' + ((dateValue.getDate() > 9) ? dateValue.getDate() : ('0' + dateValue.getDate())) + '/' + dateValue.getFullYear();
+            return newDate;
+        }
+        function isEmpty(stValue) {
+            return ((stValue === 'none' || stValue === '' || stValue === null || stValue === undefined) || (stValue.constructor === Array && stValue.length === 0) ||
+                (stValue.constructor === Object && (function(v) { for (var k in v) return false;return true; }) (stValue)));
+        }
+        function ytdValues(recID,weekofDate,payDate,driverData,formatWeek,truckIDs){
             var firstDay =new Date(weekofDate.getFullYear(), 0);
             var formatFirst = formatDate(firstDay);
             var ytd_arr = [];
@@ -24,6 +31,9 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
             var ytdFuel = 0;
             var ytdDeduction = 0;
             var netEarnings = 0;
+            var startDate = formatFirst + " 12:00 am";
+            var endDate = payDate + " 11:59 pm";
+            log.debug('YTD Date Range', startDate + " - "+endDate)
             var ytdEarningSS = search.create({
                 type: "customrecord_agency_mf_media",
                 filters:
@@ -32,7 +42,7 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                         "AND",
                         ["custrecord_agency_mf_created_from.mainline","is","T"],
                         "AND",
-                        ["custrecord_agency_mf_delivery_date","within",formatFirst,formatWeek]
+                        ["created","within",startDate,endDate]
                     ],
                 columns:
                     [
@@ -75,11 +85,12 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                     [
                         ["isinactive","is","F"],
                         "AND",
-                        ["custrecord192.internalid","noneof","@NONE@"],
+                        ["custrecord192.internalid","anyof",truckIDs],
+                        /*"AND",
+                        ["custrecord196.custrecord_driver_vendor","anyof",recID],*/
                         "AND",
-                        ["custrecord196.custrecord_driver_vendor","anyof",recID],
-                        "AND",
-                        ["formuladate: NVL({custrecord350}, {custrecord186})","within",formatFirst,formatWeek]
+                        //["formuladate: NVL({custrecord350}, {custrecord186})","within",formatFirst,formatWeek]
+                        ["created","within",startDate,endDate]
                     ],
                 columns:
                     [
@@ -115,7 +126,8 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                         "AND",
                         ["custrecord_ah_truck_id","noneof","@NONE@"],
                         "AND",
-                        ["custrecord_ah_start_date","within",formatFirst,formatWeek]
+                        //["custrecord_ah_start_date","within",formatFirst,formatWeek]
+                        ["created","within",startDate,endDate]
                     ],
                 columns:
                     [
@@ -157,7 +169,9 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                         "AND",
                         ["mainline","is","T"],
                         "AND",
-                        ["trandate", "within", formatFirst,formatWeek]
+                        ["trandate", "within", formatFirst,payDate],
+                        "AND",
+                        ["memo","isnotempty",""]
                     ],
                 columns:
                     [
@@ -188,7 +202,7 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
             ytdObj.ytdFuel =Number(fuelAmt).toFixed(2);
             ytdObj.ytdDeduction = Number(deductAmt).toFixed(2);
             ytdObj.ytdAdjustment = adjustYTD.toFixed(2)
-            ytdObj.dateRange = formatFirst + ' - '+formatWeek;
+            ytdObj.dateRange = formatFirst + ' - '+payDate;
             if(Number(netEarnings) < 0) {
                 netEarnings = netEarnings * -1;
                 ytdObj.netAmt = "("+Number(netEarnings).toFixed(2)+")";
@@ -198,10 +212,13 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
             ytd_arr.push(ytdObj);
             return ytd_arr;
         }
-        function weekValues(recID,weekofDate,payDate,priorDate,driverData){
+        function weekValues(recID,weekofDate,payDate,pmtDate,driverData,truckIDs){
             var totalWeek = 0;
             var week_arr = [];
             var weekObj = {};
+            var startDate = weekofDate + " 12:00 am";
+            var endDate = payDate + " 11:59 pm";
+            log.debug('Date Range', startDate + " - "+endDate)
             var weekEarningSS = search.create({
                 type: "customrecord_agency_mf_media",
                 filters:
@@ -210,7 +227,7 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                         "AND",
                         ["custrecord_agency_mf_created_from.mainline","is","T"],
                         "AND",
-                        ["custrecord_agency_mf_delivery_date","within",priorDate,weekofDate]
+                        ["created","within",startDate,endDate]
                     ],
                 columns:
                     [
@@ -240,11 +257,13 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                 type: "customrecord_ah_fuel_purchases",
                 filters:
                     [
-                        ["custrecord196.custrecord_driver_vendor","anyof",recID],
-                        /*"AND",
-                        ["custrecord186","within",priorDate,weekofDate],*/
+                        /*["custrecord196.custrecord_driver_vendor","anyof",recID],
                         "AND",
-                        ["formuladate: NVL({custrecord350}, {custrecord186})","within",priorDate,weekofDate]
+                        ["custrecord186","within",priorDate,weekofDate],*/
+                        ["custrecord192.internalid","anyof",truckIDs],
+                        "AND",
+                        //["formuladate: NVL({custrecord350}, {custrecord186})","within",priorDate,weekofDate]
+                        ["created","within",startDate,endDate]
                     ],
                 columns:
                     [
@@ -280,7 +299,8 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                         "AND",
                         ["custrecord_ah_truck_id","noneof","@NONE@"],
                         "AND",
-                        ["custrecord_ah_start_date","within",priorDate,weekofDate]
+                        //["custrecord_ah_start_date","within",weekofDate,payDate]
+                        ["created","within",startDate,endDate]
                     ],
                 columns:
                     [
@@ -322,7 +342,9 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                         "AND",
                         ["mainline","is","T"],
                         "AND",
-                        ["trandate", "within", priorDate,weekofDate]
+                        ["trandate", "within", weekofDate,payDate],
+                        "AND",
+                        ["memo","isnotempty",""]
                     ],
                 columns:
                     [
@@ -340,7 +362,7 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                     name: "amount",
                     summary: "SUM"
                 });
-                if(Number(creditAmt) < 0){
+                if(Number(creditAmt) > 0){
                     creditAmt = creditAmt * -1;
                 }
                 totalWeek += Number(creditAmt);
@@ -355,9 +377,14 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
 
             weekObj.weekFuel =Number(fuelAmt).toFixed(2);
             weekObj.weekDeduction = Number(deductAmt).toFixed(2);
-            weekObj.weekAdjust = Number(creditAmt).toFixed(2);
+            if(Number(creditAmt) < 0) {
+                creditAmt = creditAmt * -1;
+                weekObj.weekAdjust = "("+Number(creditAmt).toFixed(2)+")";
+            }else{
+                weekObj.weekAdjust = Number(creditAmt).toFixed(2);
+            }
             weekObj.weekEnd = weekofDate;
-            weekObj.pmtDate = payDate;
+            weekObj.pmtDate = pmtDate;
             if(Number(totalWeek) < 0) {
                 totalWeek = totalWeek * -1;
                 weekObj.weekTotal = "("+Number(totalWeek).toFixed(2)+")";
@@ -367,7 +394,11 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
             week_arr.push(weekObj);
             return week_arr;
         }
-        function totalEarnings(recID,priorDate,weekofDate){
+        function totalEarnings(recID,priorDate,weekofDate,truckID_arr,formatToday){
+            //weekofDate = weekofDate + " 11:59 pm";
+            var startDate = weekofDate + " 12:00 am";
+            var endDate = formatToday + " 11:59 pm";
+            log.debug('totalEarnings Date Range', startDate + " - "+endDate)
             var earning_arr = [];
             var final_arr = [];
             var finalObj = {};
@@ -380,7 +411,7 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                         "AND",
                         ["custrecord_agency_mf_created_from.mainline","is","T"],
                         "AND",
-                        ["custrecord_agency_mf_delivery_date","within",priorDate,weekofDate]
+                        ["created","within",startDate,endDate]
 
                     ],
                 columns:
@@ -466,20 +497,27 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
             final_arr.push(finalObj);
             return final_arr;
         }
-        function totalFuel(recID,priorDate,weekofDate,truckIDs) {
+        function totalFuel(recID,priorDate,weekofDate,truckIDs,formatToday) {
             var fuel_arr = [];
             var final_arr = [];
             var finalObj = {};
             var totalAmt = 0;
+            var startDate = weekofDate + " 12:00 am";
+            var endDate = formatToday + " 11:59 pm";
+            log.debug('totalFuel Date Range', startDate + " - " + endDate)
             var fuelSearch = search.create({
                 type: "customrecord_ah_fuel_purchases",
                 filters:
                     [
-                        ["custrecord196.custrecord_driver_vendor","anyof",recID],
-                        /*"AND",
-                        ["custrecord186","within",priorDate,weekofDate],*/
+                        /*"AND",["custrecord196.custrecord_driver_vendor","anyof",recID],
+
+                        ["custrecord186","within",priorDate,weekofDate],
                         "AND",
-                        ["formuladate: NVL({custrecord350}, {custrecord186})","within",priorDate,weekofDate]
+                        */
+                        //["formuladate: NVL({custrecord350}, {custrecord186})","within",startDate,endDate],
+                        ["created", "within", startDate, endDate],
+                        "AND",
+                        ["custrecord192", "anyof", truckIDs]
                     ],
                 columns:
                     [
@@ -506,10 +544,10 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                         })
                     ]
             });
-            var fuelResults = fuelSearch.run().getRange({start:0,end:999});
+            var fuelResults = fuelSearch.run().getRange({start: 0, end: 999});
             var fuelCount = 0;
-            if(fuelResults.length!==0){
-                for(var a=0;a<fuelResults.length;a++){
+            if (fuelResults.length !== 0) {
+                for (var a = 0; a < fuelResults.length; a++) {
                     var fuelObj = {};
                     var truck = '';
                     var count = 0;
@@ -526,7 +564,7 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                         name: "custrecord189",
                         summary: "SUM"
                     });
-                    if(!isEmpty(lineAmt)){
+                    if (!isEmpty(lineAmt)) {
                         totalAmt += Number(lineAmt);
                         //lineAmt = Number(lineAmt) * -1;
                     }
@@ -546,11 +584,14 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
             final_arr.push(finalObj);
             return final_arr;
         }
-        function totalDeduction(recID,priorDate,weekofDate){
+        function totalDeduction(recID,priorDate,weekofDate,truckID_arr,formatToday){
             var deduction_arr = [];
             var final_arr = [];
             var finalObj = {};
             var totalAmt = 0;
+            var startDate = weekofDate+ " 12:00 am";
+            var endDate = formatToday + " 11:59 pm";
+            log.debug('totalDeduction Date Range', startDate + " - "+endDate)
             var deductionSearch = search.create({
                 type: "customrecord_ah_deductions",
                 filters:
@@ -559,7 +600,7 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                         "AND",
                         ["custrecord_ah_truck_id","noneof","@NONE@"],
                         "AND",
-                        ["custrecord_ah_start_date","within",priorDate,weekofDate]
+                        ["created","within",startDate,endDate]
                     ],
                 columns:
                     [
@@ -629,7 +670,7 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
             final_arr.push(finalObj);
             return final_arr;
         }
-        function leaseFees(recID,priorDate,weekofDate){
+        function leaseFees(recID){
             var lease_arr=[];
             var leaseFeeSearch = search.create({
                 type: "customrecord_truck_record",
@@ -663,7 +704,7 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
             //('Fee Obj', lease_arr)
             return lease_arr;
         }
-        function getAdjustments(recID,driverData,priorDate,weekofDate){
+        function getAdjustments(recID,driverData,priorDate,weekofDate,formatToday){
             var head_arr = [];
             var headObj = {};
             var creditSearch = search.create({
@@ -682,21 +723,17 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                         "AND",
                         ["mainline","is","T"],
                         "AND",
-                        ["trandate", "within", priorDate, weekofDate]
+                        ["trandate", "within", weekofDate, formatToday],
+                        "AND",
+                        ["memo","isnotempty",""]
                     ],
                 columns:
                     [
                         search.createColumn({name: "internalid", label: "Internal ID"}),
                         search.createColumn({name: "tranid", label: "Document Number"}),
                         search.createColumn({name: "transactionnumber", label: "Transaction Number"}),
-                        search.createColumn({name: "entity", label: "Name"}),
                         search.createColumn({name: "amount", label: "Amount"}),
                         search.createColumn({name: "memo", label: "Memo"}),
-                        search.createColumn({
-                            name: "altname",
-                            join: "vendor",
-                            label: "Name"
-                        })
                     ]
             });
             var creditResults = creditSearch.run().getRange({start:0,end:999});
@@ -711,6 +748,9 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                     var amount = 0;
                     var creditNum = creditResults[c].getValue("transactionnumber");
                     var creditMemo = creditResults[c].getValue("memo");
+                    if (creditMemo.indexOf('&') !== -1) {
+                        creditMemo = creditMemo.replace(/&/g, '&amp;');
+                    }
                     var creditAmt = creditResults[c].getValue("amount");
                     if(Number(creditAmt) < 0){
                         creditAmt = creditAmt * -1;
@@ -731,14 +771,16 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
             head_arr.push(headObj);
             return head_arr;
         }
-        function getStatement(recID,driverData,priorDate,weekofDate,truckIDs,locationID,finalDate,rawDate){
+        function getStatement(recID,driverData,pmtDate,weekofDate,truckIDs,locationID,finalDate,rawDate){
             log.debug("Truck IDs", truckIDs)
             var headObj = {};
             var head_arr = [];
             var finalArr = [];
             var firstDay =new Date(rawDate.getFullYear(), 0);
             var formatFirst = formatDate(firstDay);
-            var dateRange = formatFirst+" - "+weekofDate;
+            var ytdStartDate = formatFirst + " 12:00 am";
+            var ytdEndDate = finalDate + " 11:59 pm";
+            var dateRange = formatFirst+" - "+finalDate;
             for(var f=0;f<truckIDs.length;f++) {
                 var truckID = truckIDs[f];
                 var finalObj = {};
@@ -777,7 +819,8 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                             "AND",
                             ["custrecord_agency_mf_created_from.mainline","is","T"],
                             "AND",
-                            ["custrecord_agency_mf_delivery_date","within",formatFirst,weekofDate],
+                            ["created","within",ytdStartDate,ytdEndDate],
+                            //["custrecord_agency_mf_delivery_date","within",formatFirst,weekofDate],
                             "AND",
                             ["custrecord_truck.internalid", "anyof", truckID]
                         ],
@@ -811,7 +854,8 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                         [
                             ["isinactive","is","F"],
                             "AND",
-                            ["custrecord_ah_start_date","within",formatFirst,weekofDate],
+                            ["created","within",ytdStartDate,ytdEndDate],
+                            //["custrecord_ah_start_date","within",formatFirst,weekofDate],
                             "AND",
                             ["custrecord185.internalid","anyof",recID],
                             "AND",
@@ -842,14 +886,15 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                             ["isinactive", "is", "F"],
                             "AND",
                             ["custrecord192.internalid", "anyof", truckID],
-                           /* "AND",
-                            ["custrecord186", "within", formatFirst, weekofDate],*/
+                            /* "AND",
+                             ["custrecord186", "within", formatFirst, weekofDate],
                             "AND",
-                            ["custrecord196.custrecord_driver_vendor", "anyof", recID],
+                            ["custrecord196.custrecord_driver_vendor", "anyof", recID],*/
                             "AND",
                             ["custrecord198", "anyof", locationID],
                             "AND",
-                            ["formuladate: NVL({custrecord350}, {custrecord186})","within",formatFirst,weekofDate]
+                            ["created","within",ytdStartDate,ytdEndDate]
+                            // ["formuladate: NVL({custrecord350}, {custrecord186})","within",formatFirst,weekofDate]
                         ],
                     columns:
                         [
@@ -895,7 +940,7 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                 }else{
                     finalObj.ytdTotal = Number(netEarnings).toFixed(2);
                 }
-                finalObj.payDate = finalDate;
+                finalObj.payDate = pmtDate;
                 finalObj.weekEnding = weekofDate;
                 var truckObj = search.lookupFields({
                     type:'customrecord_truck_record',
@@ -904,6 +949,9 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                 });
                 var truckNum = truckObj.name;
                 var leaseAmt = truckObj.custrecord163;
+                var startDate = weekofDate + " 12:00 am";
+                var endDate = finalDate + " 11:59 pm";
+                log.debug('Date Range', startDate + " - "+endDate)
                 var detailSearch = search.create({
                     type: "customrecord_agency_mf_media",
                     filters:
@@ -912,7 +960,7 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                             "AND",
                             ["custrecord155.internalid","anyof",recID],
                             "AND",
-                            ["custrecord_agency_mf_delivery_date", "within", priorDate, weekofDate],
+                            ["created", "within", startDate, endDate],
                             "AND",
                             ["custrecord_truck.internalid", "anyof", truckID],
                             "AND",
@@ -920,7 +968,6 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                         ],
                     columns:
                         [
-                            search.createColumn({name: "id", label: "ID"}),
                             search.createColumn({name: "internalid", label: "Internal ID"}),
                             search.createColumn({name: "custrecord_agency_mf_created_from", label: "Created From"}),
                             search.createColumn({
@@ -949,7 +996,6 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                                 label: "Media Fulfillment Quantity"
                             }),
                             search.createColumn({name: "custrecord155", label: "Vendor #"}),
-                            search.createColumn({name: "custrecord_ah_trucker_name", label: "Trucker Name"}),
                             search.createColumn({name: "custrecord_agency_mf_quantity_4", label: "Leasing Fee"}),
                             search.createColumn({name: "custrecord_agency_mf_quantity_5", label: "Mileage"}),
                             search.createColumn({name: "custrecord_agency_mf_quantity_6", label: "Total Revenue"}),
@@ -1007,6 +1053,9 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                             isSame = 'SAME';
                         }
                         var detailName = detailResults[x].getValue("custrecord197");
+                        if (detailName.indexOf('&') !== -1) {
+                            detailName = detailName.replace(/&/g, '&amp;');
+                        }
                         var detailDate = detailResults[x].getValue("custrecord_agency_mf_delivery_date");
                         /*var detailFrom = detailResults[x].getText({
                             name: "custrecord_ah_location",
@@ -1100,13 +1149,14 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                             "AND",
                             ["custrecord192.internalid", "anyof", truckID],
                             /*"AND",
-                            ["custrecord186", "within", priorDate, weekofDate],*/
+                            ["custrecord186", "within", priorDate, weekofDate],
                             "AND",
-                            ["custrecord196.custrecord_driver_vendor", "anyof", recID],
+                            ["custrecord196.custrecord_driver_vendor", "anyof", recID],*/
                             "AND",
                             ["custrecord198", "anyof", locationID],
                             "AND",
-                            ["formuladate: NVL({custrecord350}, {custrecord186})","within",priorDate,weekofDate]
+                            //["formuladate: NVL({custrecord350}, {custrecord186})","within",weekofDate,finalDate]
+                            ["created", "within", startDate, endDate]
                         ],
                     columns:
                         [
@@ -1150,12 +1200,22 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                         var fuelOrder = fuelResults[i].getText('custrecord193');
                         var fuelDate = fuelResults[i].getValue('custrecord186');
                         var fuelLocation = fuelResults[i].getText('custrecord198');
+                        if (fuelLocation.indexOf('&') !== -1) {
+                            fuelLocation = fuelLocation.replace(/&/g, '&amp;');
+                        }
                         var fuelGallons = fuelResults[i].getValue('custrecord187');
                         var fuelPrice = fuelResults[i].getValue('custrecord188');
                         var fuelFee = fuelResults[i].getValue('custrecord257');
+
                         var fuelCost = fuelResults[i].getValue('custrecord189');
                         var fuelType = fuelResults[i].getText('custrecord195');
+                        if (fuelType.indexOf('&') !== -1) {
+                            fuelType = fuelType.replace(/&/g, '&amp;');
+                        }
                         var fuelStation = fuelResults[i].getValue('custrecord259');
+                        if (fuelStation.indexOf('&') !== -1) {
+                            fuelStation = fuelStation.replace(/&/g, '&amp;');
+                        }
                         totalFee += Number(fuelCost);
                         fuelObj.tranid = fuelType;
                         fuelObj.date = fuelDate;
@@ -1180,7 +1240,7 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                         [
                             ["isinactive", "is", "F"],
                             "AND",
-                            ["custrecord_ah_start_date", "within", priorDate, weekofDate],
+                            ["created", "within", startDate, endDate],
                             "AND",
                             ["custrecord_ah_truck_id.internalid", "anyof", truckID],
                             "AND",
@@ -1216,6 +1276,9 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                         var deductAmt = 0;
                         var deductType = deductionResults[d].getText('custrecord_ah_deduction_type');
                         var totalAmt = deductionResults[d].getValue('custrecord_ah_amount');
+                        if (deductType.indexOf('&') !== -1) {
+                            deductType = deductType.replace(/&/g, '&amp;');
+                        }
                         totalDeduction += Number(totalAmt);
                         deductionObj.deductDesc = deductType;
                         deductionObj.deductAmt = Number(totalAmt).toFixed(2);
@@ -1280,7 +1343,7 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
             }
             return driver_arr;
         }
-        function getTrucks(recID,priorDate,weekofDate){
+        function getTrucks(recID){
             var truck_arr = [];
             var truckSearch = search.create({
                 type: "customrecord_truck_record",
@@ -1307,132 +1370,99 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
             }
             return truck_arr;
         }
-        function formatDate(dateValue){
-            var newDate = ((dateValue.getMonth() > 8) ? (dateValue.getMonth() + 1) : ('0' + (dateValue.getMonth() + 1))) + '/' + ((dateValue.getDate() > 9) ? dateValue.getDate() : ('0' + dateValue.getDate())) + '/' + dateValue.getFullYear();
-            return newDate;
-        }
-        function isEmpty(stValue) {
-            return ((stValue === 'none' || stValue === '' || stValue === null || stValue === undefined) || (stValue.constructor === Array && stValue.length === 0) ||
-                (stValue.constructor === Object && (function(v) { for (var k in v) return false;return true; }) (stValue)));
-        }
         /**
-         * Defines the Suitelet script trigger point.
+         * Defines the Scheduled script trigger point.
          * @param {Object} scriptContext
-         * @param {ServerRequest} scriptContext.request - Incoming request
-         * @param {ServerResponse} scriptContext.response - Suitelet response
+         * @param {string} scriptContext.type - Script execution context. Use values from the scriptContext.InvocationType enum.
          * @since 2015.2
          */
-        function onRequest  (scriptContext) {
+        const execute = (scriptContext) => {
             try{
-                if (scriptContext.request.method === 'GET') {
-                    var recordID = scriptContext.request.parameters.custparam_record_id;
-                    var weekForm = serverWidget.createForm({
-                        title: 'Week Of Selection'
-                    });
-                    var intID = weekForm.addField({
-                        id:'custpage_int_id',
-                        label:'Internal ID',
-                        type:serverWidget.FieldType.TEXT
-                    }).updateDisplayType({
-                        displayType:serverWidget.FieldDisplayType.HIDDEN
-                    }).defaultValue = recordID;
-                    var weekOf = weekForm.addField({
-                        id:'custpage_week_of',
-                        label:'Week Of',
-                        type:serverWidget.FieldType.DATE
-                    });
-                    weekForm.addSubmitButton('Submit');
-                    scriptContext.response.writePage(weekForm);
-                }else{
-                    var reqParameters = scriptContext.request.parameters;
-                    var scriptObjPost = runtime.getCurrentScript();
-                    var renderer = render.create();
-                    var xmlTemplateFile = file.load('SuiteScripts/nscs_xml_vendor_settlement.xml');
-                    renderer.templateContent = xmlTemplateFile.getContents();
-                    renderer.addRecord('companyInformation', config.load({
-                        type: config.Type.COMPANY_INFORMATION
-                    }));
-                    var head_arr = [];
-                    var headObj = {};
-                    var rawDate = reqParameters.custpage_week_of;
-                    var weekofDate = new Date(rawDate);
-                    var sevenDaysPrior = new Date(weekofDate - 8 * 24 * 60 * 60 * 1000);
-                    var formatPrior = formatDate(sevenDaysPrior);
-                    var dateStr = rawDate;
-                    var days = 13;
-                    var todaysDate = new Date(new Date(dateStr).setDate(new Date(dateStr).getDate() + days));
-                    var formatToday = formatDate(todaysDate);
-                    days = 7;
-                    var rawPrint = new Date((new Date(dateStr).setDate(new Date(dateStr).getDate() + days)));
-                    var printDate = formatDate(rawPrint);
-                    log.debug("Print Date", printDate)
-                    var recID = reqParameters.custpage_int_id;
-                    var vendorRec = record.load({type:record.Type.VENDOR,id:recID});
-                    renderer.addRecord("record",vendorRec);
-                    var subID = vendorRec.getValue('subsidiary');
-                    renderer.addRecord('subsidiary', record.load({
-                        type:record.Type.SUBSIDIARY,
-                        id:subID
-                    }));
-                    var locationID = vendorRec.getValue('custentity2');
-                    var emailObj = search.lookupFields({
-                        type:search.Type.LOCATION,
-                        id:locationID,
-                        columns:['custrecordemail_address']
-                    });
-                    var locationEmail = emailObj.custrecordemail_address;
-                    var driverData = getDrivers(recID);
-                    var truckID_arr = getTrucks(recID,formatPrior,rawDate);
-                    var statementData = getStatement(recID,driverData,formatPrior,rawDate,truckID_arr,locationID,formatToday,weekofDate);
-                    var leaseData = leaseFees(recID,formatPrior,rawDate);
-                    var fuelData = totalFuel(recID,formatPrior,rawDate,truckID_arr);
-                    var deductionData = totalDeduction(recID,formatPrior,rawDate,truckID_arr);
-                    var earningsData = totalEarnings(recID,formatPrior,rawDate,truckID_arr);
-                    var adjustmentData = getAdjustments(recID,driverData,formatPrior,rawDate);
-                    headObj.email = locationEmail;
-                    headObj.print = printDate;
-                    headObj.lease = leaseData;
-                    headObj.earnings = earningsData;
-                    headObj.fuel = fuelData;
-                    headObj.deduction = deductionData;
-                    headObj.adjustment = adjustmentData;
-                    headObj.ytd = ytdValues(recID,weekofDate,formatToday,driverData,rawDate);
-                    headObj.week = weekValues(recID,rawDate,formatToday,formatPrior,driverData);
-                    headObj.statement = statementData;
-                    head_arr.push(headObj);
-                    var items = {};
-                    items.item = head_arr;
-                    log.debug('items Array', 'items:' + JSON.stringify(items))
-                    renderer.addCustomDataSource({
-                        format: render.DataSource.JSON,
-                        alias: "ITEMS",
-                        data: JSON.stringify(items)
-                    });
-                    var vendorObj = search.lookupFields({
-                        type:search.Type.VENDOR,
-                        id:recID,
-                        columns:['entityid']
-                    });
-                    var entityID = vendorObj.entityid;
-                    var folderID = scriptObjPost.getParameter('custscript_nscs_folder_id');
-                    var vendorPDF = renderer.renderAsPdf();
-                    vendorPDF.folder = folderID;
-                    vendorPDF.name = "vendor_settlement_"+ entityID;
-                    var pdfFile =  vendorPDF.save();
-                    //load file and redirect to url for printing
-                    var fileLoad = file.load({
-                        id:pdfFile
-                    });
-                    redirect.redirect({
-                        url:fileLoad.url
-                    });
-                }
-            }catch(error){
-                log.error("Error", error)
-            }
+                var scriptObj = runtime.getCurrentScript();
+                var recID = scriptObj.getParameter('custscript_ns_rec_id');
+                var rawDate = scriptObj.getParameter('custscript_ns_weekof_date');
+                var xmlTemplateFile = file.load('SuiteScripts/nscs_xml_vendor_settlement.xml');
+                var renderer = render.create();
+                renderer.templateContent = xmlTemplateFile.getContents();
+                renderer.addRecord('companyInformation', config.load({
+                    type: config.Type.COMPANY_INFORMATION
+                }));
+                var head_arr = [];
+                var headObj = {};
+                var weekofDate = new Date(rawDate);
+                var sevenDaysPrior = new Date(weekofDate - 8 * 24 * 60 * 60 * 1000);
+                var formatPrior = formatDate(sevenDaysPrior);
+                var dateStr = rawDate;
+                var days = 7;
+                var todaysDate = new Date(new Date(dateStr).setDate(new Date(dateStr).getDate() + days));
+                var formatToday = formatDate(todaysDate);
+                days = 13;
+                var pmtDate = new Date(new Date(dateStr).setDate(new Date(dateStr).getDate() + days));
+                var formatPmt = formatDate(pmtDate);
+                log.debug("formatToday", formatToday)
+                days = 7;
+                var rawPrint = new Date((new Date(dateStr).setDate(new Date(dateStr).getDate() + days)));
+                var printDate = formatDate(rawPrint);
+                log.debug("Print Date", printDate)
+                var vendorRec = record.load({type:record.Type.VENDOR,id:recID});
+                renderer.addRecord("record",vendorRec);
+                var subID = vendorRec.getValue('subsidiary');
+                renderer.addRecord('subsidiary', record.load({
+                    type:record.Type.SUBSIDIARY,
+                    id:subID
+                }));
+                var locationID = vendorRec.getValue('custentity2');
+                var emailObj = search.lookupFields({
+                    type:search.Type.LOCATION,
+                    id:locationID,
+                    columns:['custrecordemail_address']
+                });
+                var locationEmail = emailObj.custrecordemail_address;
+                var driverData = getDrivers(recID);
+                var truckID_arr = getTrucks(recID);
+                log.debug('truckID_arr', truckID_arr)
+                var statementData = getStatement(recID,driverData,formatPmt,rawDate,truckID_arr,locationID,formatToday,weekofDate);
+                var leaseData = leaseFees(recID);
+                var fuelData = totalFuel(recID,formatPmt,rawDate,truckID_arr,formatToday);
+                var deductionData = totalDeduction(recID,formatPmt,rawDate,truckID_arr,formatToday);
+                var earningsData = totalEarnings(recID,formatPmt,rawDate,truckID_arr,formatToday);
+                var adjustmentData = getAdjustments(recID,driverData,formatPmt,rawDate,formatToday);
+                headObj.email = locationEmail;
+                headObj.print = printDate;
+                headObj.lease = leaseData;
+                headObj.earnings = earningsData;
+                headObj.fuel = fuelData;
+                headObj.deduction = deductionData;
+                headObj.adjustment = adjustmentData;
+                headObj.ytd = ytdValues(recID,weekofDate,formatToday,driverData,rawDate,truckID_arr);
+                headObj.week = weekValues(recID,rawDate,formatToday,formatPmt,driverData,truckID_arr);
+                headObj.statement = statementData;
+                head_arr.push(headObj);
+                var items = {};
+                items.item = head_arr;
+                log.debug('items Array', 'items:' + JSON.stringify(items))
+                renderer.addCustomDataSource({
+                    format: render.DataSource.JSON,
+                    alias: "ITEMS",
+                    data: JSON.stringify(items)
+                });
+                var vendorObj = search.lookupFields({
+                    type:search.Type.VENDOR,
+                    id:recID,
+                    columns:['entityid']
+                });
+                var entityID = vendorObj.entityid;
+                var folderID = scriptObj.getParameter('custscript_nsts_folder_id');
+                var vendorPDF = renderer.renderAsPdf();
+                vendorPDF.folder = folderID;
+                vendorPDF.name = "vendor_settlement_"+ entityID+weekofDate;
+                var pdfFile =  vendorPDF.save();
 
+            }catch(error){
+                log.error("error", error)
+            }
         }
 
-        return {onRequest}
+        return {execute}
 
     });
