@@ -47,26 +47,7 @@
             log.debug("Run Script", runScript);
 
             let isValidSecret = initConfigObj.TOKEN != "" ? true : false;
-            /*
-            let isValidSecret = false;
-            if(initConfigObj.TOKEN == ""){
-                lib.generateNewSecret(initConfigObj);
-                configObj = utils.getRecordObj(configId, CONN_CONFIG.ID, CONN_CONFIG.FIELDS, true);
-                isValidSecret = lib.testConn(configObj);
-                log.debug("Token newly generated");
-            }else{
-                configObj = initConfigObj;
-                isValidSecret = lib.testConn(initConfigObj);
-                log.debug("Token reused");
-                if(!isValidSecret){
-                    lib.generateNewSecret(initConfigObj);
-                    configObj = utils.getRecordObj(configId, CONN_CONFIG.ID, CONN_CONFIG.FIELDS, true);
-                    isValidSecret = lib.testConn(configObj);
-                    log.debug("Token re-generated");
-                }
-            }
-            */
-          
+         
             configObj = utils.getRecordObj(configId, CONN_CONFIG.ID, CONN_CONFIG.FIELDS, true);
             log.debug(SCRIPT_FILE_NAME, 'isValidSecret: ' + isValidSecret);
             

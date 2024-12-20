@@ -55,7 +55,9 @@ function(record, search, https, task, format, runtime, file, config, encode, mom
             RECORD_LINK: 'custrecord_ctc_integ_recconfig_reclink',
             DUPLICATE_OPERATOR: 'custrecord_ctc_integ_recconfig_dupopr',
             RUN_ON_SCHEDULE_DAY: 'custrecord_ctc_integ_recconfig_runday',
-            BUSINESS_DAY: 'custrecord_ctc_integ_recconfig_busday'
+            BUSINESS_DAY: 'custrecord_ctc_integ_recconfig_busday',
+            RELATED_ENDPOINT: 'custrecord_ctc_integ_recconfig_rel_endpt',
+            RELATED_INTEG: 'custrecord_ctc_integ_recconfig_rel_integ',
        
         }
     }
@@ -327,6 +329,13 @@ function(record, search, https, task, format, runtime, file, config, encode, mom
                 
                 let fileId = libObj.savePayload(recObj, payLoadArray);
                 //let fileId = libObj.savePayload(recObj, simplePayloadArray);
+
+
+                //Get Related Record if available
+                if(!utils.isEmpty(recObj.RELATED_ENDPOINT) && !utils.isEmpty(recObj.RELATED_INTEG)){
+                    let relatedIntegObj = utils.getRecordObj(recObj.RELATED_INTEG, globalObj().RECORD_CONFIG.ID, globalObj().RECORD_CONFIG.FIELDS, true);
+                    let relatedEndpoint
+                }
 
                 recordRequest.push({
                     start_date: bodyObj.start_date,
