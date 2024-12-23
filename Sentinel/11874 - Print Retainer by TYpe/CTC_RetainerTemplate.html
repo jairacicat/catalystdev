@@ -229,11 +229,7 @@
             <td colspan="16"></td>
             <td colspan="5"></td>
         </tr>
-        <tr>
-            <td colspan="7">${ds.retainer.retainerStart}</td>
-            <td colspan="16">BEGINNING BALANCE</td>
-            <td colspan="5">${nsformat_currency(ds.retainer.retainerBudget)}</td>
-        </tr>
+     
 
         <!--tr>
             <td colspan="7" style="text-align: left;"><b>RETAINER BALANCE AT</b></td>
@@ -251,14 +247,31 @@
 
 
         <#if ds.invobj?has_content>
-        
+        <#assign ctr = 0>
         <#list ds.invobj as inv>
-        <tr>
-            <td colspan="7"  style="text-align: left;">${inv.trandate}</td>
-            <td colspan="16" style="text-align: left;">${inv.tranid}</td>
-            <td colspan="5" style="text-align: right;">${nsformat_currency(inv.custbody_ctc_ret_trans_amount)}</td>
-        </tr>
-    </#list>
+            <#if ctr == 0>
+                <#if inv.trandate == ds.retainer.retainerStart && inv.custbody_ctc_ret_trans_amount == ds.retainer.retainerBudget>
+                    <tr>
+                        <td colspan="7"  style="text-align: left;">${inv.trandate}</td>
+                        <td colspan="16" style="text-align: left;">${inv.tranid} - BEGINNING BALANCE</td>
+                        <td colspan="5" style="text-align: right;">${nsformat_currency(inv.custbody_ctc_ret_trans_amount)}</td>
+                    </tr>
+                <#else>
+                    <tr>
+                        <td colspan="7">${ds.retainer.retainerStart}</td>
+                        <td colspan="16">BEGINNING BALANCE</td>
+                        <td colspan="5">${nsformat_currency(ds.retainer.retainerBudget)}</td>
+                    </tr>
+                </#if>
+            <#else>
+                <tr>
+                    <td colspan="7"  style="text-align: left;">${inv.trandate}</td>
+                    <td colspan="16" style="text-align: left;">${inv.tranid}</td>
+                    <td colspan="5" style="text-align: right;">${nsformat_currency(inv.custbody_ctc_ret_trans_amount)}</td>
+                </tr>
+            </#if>
+            <#assign ctr = ctr + 1>
+        </#list>
     <#else>
     <tr>
         <!--td colspan="7"  style="text-align: left;">NO INVOICE TRANSACTION FOUND</td-->
