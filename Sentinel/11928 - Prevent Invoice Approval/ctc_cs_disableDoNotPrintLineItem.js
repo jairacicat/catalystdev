@@ -107,6 +107,18 @@ define(['N/record', 'N/currentRecord'], function(record, currentRecord) {
 
             console.log("Ship To Set", addressBook);
         }
+        console.log("fieldId: ", context.fieldId)
+
+        if(context.fieldId == 'ismultishipto'){
+            let INVOICE = context.currentRecord;
+
+            let enableLineShipping = INVOICE.getValue({fieldId: 'ismultishipto'});
+            INVOICE.setValue({
+                fieldId: 'custbody23',
+                value: enableLineShipping,
+                ignoreFieldChange: true
+            });
+        }
     }
 
     function lineInit(context){
@@ -156,10 +168,21 @@ define(['N/record', 'N/currentRecord'], function(record, currentRecord) {
         return true;
     }
 
+    function saveRecord(context){
+        let INVOICE = context.currentRecord;
+        let enableLineShipping = INVOICE.getValue({fieldId: 'ismultishipto'});
+        INVOICE.setValue({
+            fieldId: 'custbody23',
+            value: enableLineShipping
+        });
+        return true;
+    }
+
     return {
         fieldChanged: fieldChanged,
         lineInit: lineInit,
-        validateLine: validateLine
+        validateLine: validateLine,
+        saveRecord: saveRecord
         //pageInit: pageInit
     };
 });

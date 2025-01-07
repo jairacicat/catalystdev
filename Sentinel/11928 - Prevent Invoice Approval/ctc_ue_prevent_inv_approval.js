@@ -26,6 +26,23 @@
 
 define(['N/record'],
     function(record) {
+        function beforeLoad(context){
+            let INVOICE = context.newRecord;
+
+            let enableLineShipping = INVOICE.getValue({
+                fieldId: 'ismultishipto'
+            });
+
+            log.debug("BeforeLoad: ", enableLineShipping);
+            INVOICE.setValue({
+                fieldId: 'custbody23',
+                value: enableLineShipping 
+            });
+            INVOICE.setValue({
+                fieldId: 'memo',
+                value: enableLineShipping 
+            });
+        }
         function beforeSubmit(context) {
             if(context.type == context.UserEventType.EDIT || context.type == context.UserEventType.APPROVE){
                     let OLD_INVOICE = context.oldRecord;
@@ -44,14 +61,16 @@ define(['N/record'],
 
                     log.debug("invoiceStatus", invoiceStatus);
 
-                    if(!(oldStatus == 1 && invoiceStatus == 2)) return; 
+                   // if(!(oldStatus == 1 && invoiceStatus == 2)) return; 
                     
                     //Check if Enable Line Shipping is checked
                     let enableLineShipping = INVOICE.getValue({
-                        fieldId: 'ismultishipto'
+                        fieldId: 'custbody23'
                     });
+                    log.debug("enable line shipping", enableLineShipping);
                     
-                    if(enableLineShipping == true || enableLineShipping == "T"){
+                    if(enableLineShipping == true || enableLineShipping == "T" || enableLineShipping == 'true'){
+                        log.debug("enablelineshipping true")
                         let itemCount = INVOICE.getLineCount({ sublistId: 'item' });
                         for(var i = 0; i < itemCount; i++){
                             let lineShipTo = INVOICE.getSublistValue({
@@ -66,17 +85,24 @@ define(['N/record'],
                                 line: i
                             });
 
+                            log.debug("Line Ship To", lineShipTo);
+                            log.debug("Line Address Book", lineAddressBook);
                             if(isEmpty(lineShipTo) || isEmpty(lineAddressBook)){
                                 throw("Cannot approve this Invoice: Please populate Address Book or Ship To on line " + (parseInt(i + 1)) + ".");
                             }
                         }
+
+                        let shipToSelectField = INVOICE.getField({fieldId: 'shipaddresslist'});
+                        shipToSelectField.isMandatory = false;
                     }
                     else{
+                        
                         let bodyShipTo = INVOICE.getValue({
-                            fieldId: 'shipaddress'
+                            fieldId: 'shipaddresslist'
                         });
+                        log.debug("body ship to", bodyShipTo);
 
-                        if(isEmpty(bodyShipTo)){
+                        if(isEmpty(bodyShipTo) && !enableLineShipping){
                             throw("Cannot approve this Invoice: Please populate the Ship To field.");
                         }
                     }
@@ -89,7 +115,8 @@ define(['N/record'],
         }
 
         return {
-            beforeSubmit: beforeSubmit
+            beforeSubmit: beforeSubmit,
+            beforeLoad: beforeLoad
           
         };
     });
