@@ -256,12 +256,18 @@
                         <td colspan="16" style="text-align: left;">${inv.tranid} - BEGINNING BALANCE</td>
                         <td colspan="5" style="text-align: right;">${nsformat_currency(inv.custbody_ctc_ret_trans_amount)}</td>
                     </tr>
-                <#else>
+                <#elseif inv.custbody_ctc_ret_trans_amount != ds.retainer.retainerBudget>
                     <tr>
                         <td colspan="7">${ds.retainer.retainerStart}</td>
                         <td colspan="16">BEGINNING BALANCE</td>
                         <td colspan="5">${nsformat_currency(ds.retainer.retainerBudget)}</td>
                     </tr>
+                    <tr>
+                        <td colspan="7">${inv.trandate}</td>
+                        <td colspan="16">${inv.tranid}</td>
+                        <td colspan="5">${nsformat_currency(inv.custbody_ctc_ret_trans_amount)}</td>
+                    </tr>
+
                 </#if>
             <#else>
                 <tr>
@@ -308,10 +314,8 @@
     <td colspan="7" style="text-align: left;"><b>RETAINER BALANCE AT</b></td>
     <td colspan="16"  style="text-align: left;"><b>${ds.today}</b></td>
     <td colspan="5" style="text-align: right;"><b>
-        <#if ds.custobj?has_content>
-        <#list ds.custobj as custInfo>
-        ${nsformat_currency(custInfo.values.custentity_ctc_custret_totalbalance)}
-    </#list>
+        <#if ds.retainer.retainerBalance?has_content>
+        ${nsformat_currency(ds.retainer.retainerBalance)}
         <#else>
         <em>0.00</em>
     </#if></b>

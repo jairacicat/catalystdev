@@ -471,7 +471,8 @@ define(['N/file', 'N/render', 'N/search', 'N/log', 'N/redirect', 'N/record',
             var retainerObj = {
                 'retainerStart': null,
                 'retainerEnd': null,
-                'retainerBudget': null
+                'retainerBudget': null,
+                'retainerBalance': null
             };
 
             if (!isEmpty(custId)) {
@@ -492,7 +493,7 @@ define(['N/file', 'N/render', 'N/search', 'N/log', 'N/redirect', 'N/record',
                             operator: search.Operator.ANYOF,
                             values: retainerId
                         })],
-                        columns: ['internalid', 'name', 'custrecord_ctc_rtnr_total_budget', 'custrecord_ctc_rtnr_start_date', 'custrecord_ctc_rtnr_end_date', 'custrecord_ctc_rtnr_type'] //ALI
+                        columns: ['internalid', 'name', 'custrecord_ctc_rtnr_total_budget', 'custrecord_ctc_rtnr_start_date', 'custrecord_ctc_rtnr_end_date', 'custrecord_ctc_rtnr_type', 'custrecord_ctc_rtnr_total_bgt_remaining'] //ALI
                     });
 
                     retainerResult = customerRetainerSearch.run().getRange({
@@ -512,6 +513,7 @@ define(['N/file', 'N/render', 'N/search', 'N/log', 'N/redirect', 'N/record',
                             var endDate = retainerResult[i].getValue({name: 'custrecord_ctc_rtnr_end_date'});
                             var totalBudget = retainerResult[i].getValue({name: 'custrecord_ctc_rtnr_total_budget'});
                             var retainerType = retainerResult[i].getText({name: 'custrecord_ctc_rtnr_type'}); //ALI
+                            var retainerBalance = retainerResult[i].getValue({name: 'custrecord_ctc_rtnr_total_bgt_remaining'});
                             var retainerDateCreated = retainerResult[i].getValue({name: 'created'});
                             log.debug(retainerResult[i], 'retName: ' + retName + ' -startDate:' + startDate + ' - endDate: ' + endDate + ' - custrecord_ctc_rtnr_total_budget:' + totalBudget + ' - retainerType:' + retainerType);
                             retainerObj = {
@@ -519,7 +521,8 @@ define(['N/file', 'N/render', 'N/search', 'N/log', 'N/redirect', 'N/record',
                                 'retainerEnd': endDate,
                                 'retainerBudget': totalBudget,
                                 'retainerType': retainerType, //ALI
-                                'retainerName': retName
+                                'retainerName': retName,
+                                'retainerBalance': retainerBalance
                             }
                         }
                     }

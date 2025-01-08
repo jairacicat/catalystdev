@@ -27,6 +27,7 @@
  */
     //var retainerItem = ['99047', '99196', '99195'] //Retainer - NetSuite (sb)
 var retainerItem = ['118568', '284603', '284604', '71668', '127208']
+var retainerItemList = [118568, 284603, 284604, 127208, 71668, 53238, 156689, 156686, 53238];
 define(['N/file', 'N/render', 'N/search', 'N/log', 'N/redirect', 'N/record',
         'N/config'],
     function (file, render, search, log, redirect, record, config) {
