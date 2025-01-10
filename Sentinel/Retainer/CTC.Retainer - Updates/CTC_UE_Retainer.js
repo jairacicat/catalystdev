@@ -100,13 +100,13 @@ define(['N/record', 'N/search', 'N/log', 'SuiteScripts/CTC.Sentinel/CTC.SS2/CTC.
                 if(retainerBudget != retainerBudgetCalc){
                     current_rec.setValue({
                         fieldId: 'custrecord_ctc_rtnr_total_budget',
-                        value: retainerBudgetCalc
+                        value: retainerBudgetCalc || 0
                     });
 
                     retainerBudget = retainerBudgetCalc;
 
                     if(beginningBalance != ''){
-                        retainerBudget = retainerBudget + beginningBalance
+                        retainerBudget = retainerBudget + beginningBalance || 0;
                     }
                 }
                 
