@@ -368,6 +368,8 @@ define(['N/ui/serverWidget', 'N/search', 'N/url', 'N/redirect', 'N/runtime', 'N/
             // Client Script to handle buttons
             form.clientScriptModulePath = './ctc_cs_vbmassapproval.js';
 
+            //Try 
+
             context.response.writePage(form);
         }
 
