@@ -767,7 +767,7 @@ define(['N/record', 'N/search', 'N/log', 'N/currentRecord'],
             return totalBilled;
 
         }
-        function getTotalParentRetainer(retainerId, customerId) {
+        function getTotalParentRetainer(retainerId, customerId, beginningTransaction) {
             var stLogTitle = 'getTotalParentRetainer | ' + retainerId + ' |customerId:' + customerId;
             var totalBudget = null;
 
@@ -797,6 +797,17 @@ define(['N/record', 'N/search', 'N/log', 'N/currentRecord'],
                         search.createColumn({name: "custbody_ctc_inv_addto_retainer", label: "INV: Add to Retainer"})
                     ]
             });
+
+            log.audit(beginningTransaction, beginningTransaction);
+            if(beginningTransaction != null && beginningTransaction != ''){
+                retainerTransactionSearch.filters.push(search.createFilter({
+                    name: 'internalid',
+                    operator: 'noneof',
+                    values: beginningTransaction
+                }));
+
+                log.audit('retainerTransactionSearchfitlers', retainerTransactionSearch.filters );
+            }
 
             var retainerTransactionResult = retainerTransactionSearch.run();
 

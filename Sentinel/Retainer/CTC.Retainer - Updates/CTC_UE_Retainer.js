@@ -88,13 +88,62 @@ define(['N/record', 'N/search', 'N/log', 'SuiteScripts/CTC.Sentinel/CTC.SS2/CTC.
                     fieldId: 'custrecord_ctc_rtnr_total_budget'
                 });
                 retainerBudget = Math.abs(retainerBudget);
+
+                var beginningTransaction = current_rec.getValue({
+                    fieldId: 'custrecord_ctc_rtnr_beginningtransaction'
+                });
+                var beginningBalance = current_rec.getValue({
+                    fieldId: 'custrecord_ctc_rtnr_beginningbal'
+                });
+
+                var retainerBudgetCalc = rtnrutil.getTotalParentRetainer(retainerId, customerId, beginningTransaction);
+                if(retainerBudget != retainerBudgetCalc){
+                    current_rec.setValue({
+                        fieldId: 'custrecord_ctc_rtnr_total_budget',
+                        value: retainerBudgetCalc
+                    });
+
+                    retainerBudget = retainerBudgetCalc;
+
+                    if(beginningBalance != ''){
+                        retainerBudget = retainerBudget + beginningBalance
+                    }
+                }
+                
+
                 var retainerBudgAdj = current_rec.getValue({
                     fieldId: 'custrecord_ctc_rtnr_total_bgt_adjustment'
                 });
+
+                /*
+                var retainerBudgetAdjCalc = rtnrutil.getTotalParentRetainer(retainerId, customerId, beginningTransaction);
+                log.audit("retainerBudgetAdjCalc", retainerBudgetAdjCalc);
+                if(retainerBudgAdj != retainerBudgetAdjCalc){
+                    current_rec.setValue({
+                        fieldId: 'custrecord_ctc_rtnr_total_bgt_adjustment',
+                        value: retainerBudgetAdjCalc
+                    });
+
+                    retainerBudgAdj = retainerBudgetAdjCalc;
+                }
+                    */
+
                 var retainerBilled = current_rec.getValue({
                     fieldId: 'custrecord_ctc_rtnr_total_billed'
                 });
                 retainerBilled = Math.abs(retainerBilled);
+
+                var retainerBilledCalc = rtnrutil.getRetainerTotalBilled(retainerId, customerId);
+                log.debug("RETAINER BILLED CALC", retainerBilledCalc);
+
+                if(retainerBilled != retainerBilledCalc){
+                    current_rec.setValue({
+                        fieldId: 'custrecord_ctc_rtnr_total_billed',
+                        value: retainerBilledCalc
+                    });
+
+                    retainerBilled = retainerBilledCalc;
+                }
                 var retainerRemaining = current_rec.getValue({
                     fieldId: 'custrecord_ctc_rtnr_total_bgt_remaining'
                 });
@@ -116,8 +165,13 @@ define(['N/record', 'N/search', 'N/log', 'SuiteScripts/CTC.Sentinel/CTC.SS2/CTC.
 
                     retainerAmount = retainerAmount - retainerBilled;
                     log.debug(stLogTitle, 'RETAINER AMOUNT:' + retainerAmount);
+
+                    current_rec.setValue({
+                        fieldId: 'custrecord_ctc_rtnr_total_bgt_remaining',
+                        value: retainerAmount
+                    });
                     //Update billed retainer record
-                    var retId = record.submitFields({
+                    /*var retId = record.submitFields({
                         type: 'customrecord_ctc_retainer',
                         id: retainerId,
                         values: {
@@ -127,7 +181,8 @@ define(['N/record', 'N/search', 'N/log', 'SuiteScripts/CTC.Sentinel/CTC.SS2/CTC.
                             enableSourcing: true
                         }
                     });
-                    log.debug(stLogTitle, 'RETAINER UPDATE:' + retId);
+                    */
+                    log.debug(stLogTitle, 'RETAINER UPDATE:' + retainerId);
                     //Update customer total retainer balance
                     if (!rtnrutil.isEmpty(customerId)) {
                         var custRetUpdate = rtnrutil.getCustomerRetainerBalance(customerId)
@@ -146,6 +201,7 @@ define(['N/record', 'N/search', 'N/log', 'SuiteScripts/CTC.Sentinel/CTC.SS2/CTC.
                 var newRetainerName = retainerName + ' - ' + retainerType;
                 log.debug('retainer details', 'retainerName: ' + retainerName + ' | retainerType: ' + retainerType + ' | newRetainerName: ' + newRetainerName);
 
+                /*
                 record.submitFields({
                     type: 'customrecord_ctc_retainer',
                     id: retainerId,
@@ -153,6 +209,16 @@ define(['N/record', 'N/search', 'N/log', 'SuiteScripts/CTC.Sentinel/CTC.SS2/CTC.
                         'altname': newRetainerName
                     }
                 });
+                */
+
+                current_rec.setValue({
+                    fieldId: 'altname',
+                    value: newRetainerName
+                });
+
+                current_rec.save({
+                    ignoreMandatoryFields: true
+                })
 
             } // END IF CONTEXT
         } // END AFTER SUBMIT

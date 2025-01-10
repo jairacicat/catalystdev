@@ -368,6 +368,15 @@ define(['N/ui/serverWidget', 'N/search', 'N/url', 'N/redirect', 'N/runtime', 'N/
             // Client Script to handle buttons
             form.clientScriptModulePath = './ctc_cs_vbmassapproval.js';
 
+
+            //Call Map/Reduce if it's not yet running:
+            try{
+
+            }
+            catch(e){
+                log.error("Map/Reduce already running", e.message);
+            }
+
             context.response.writePage(form);
         }
 
