@@ -255,6 +255,28 @@ define(['N/ui/serverWidget', 'N/search', 'N/url', 'N/redirect', 'N/runtime', 'N/
 
             return result;
         }
+
+        function getLastSaturdayDate() {
+            const today = new Date();
+            const dayOfWeek = today.getDay();  // Get the current day of the week (0 is Sunday, 6 is Saturday)
+            const lastSaturday = new Date(today);
+        
+            // Calculate the number of days to subtract to get to the last Saturday
+            // If today is Sunday (0), subtract 1 day more than usual to get the previous week's Saturday.
+            if (dayOfWeek === 0) {  // Special case for Sunday
+                lastSaturday.setDate(today.getDate() - 8);
+            } else {
+                lastSaturday.setDate(today.getDate() - (dayOfWeek + 1));
+            }
+        
+            // Padding month and day to ensure MM/DD/YYYY format
+            const dd = String(lastSaturday.getDate()).padStart(2, '0');
+            const mm = String(lastSaturday.getMonth() + 1).padStart(2, '0'); // January is 0!
+            const yyyy = lastSaturday.getFullYear();
+        
+            return mm + '/' + dd + '/' + yyyy;  // Return formatted date string
+        }
+        
     
         function createForm(context){
             let parameters = context.request.parameters;
@@ -368,7 +390,23 @@ define(['N/ui/serverWidget', 'N/search', 'N/url', 'N/redirect', 'N/runtime', 'N/
             // Client Script to handle buttons
             form.clientScriptModulePath = './ctc_cs_vbmassapproval.js';
 
-            //Try 
+            // Call Map/Reduce to create the PDFs:
+            try{
+                var mrTask = task.create({
+                    taskType: task.TaskType.MAP_REDUCE,
+                    scriptId: 'customscript_nscs_mr_vendor_settlement', 
+                    deploymentId: 'customdeploy_vendorsettlement_approval',
+                    params: {
+                        'custscript_pdf_weekof_date' : getLastSaturdayDate()
+                    }
+                });
+
+                let mrTaskId = mrTask.submit();
+                log.debug("Map/Reduce called", mrTaskId);
+            }catch(e){
+                log.error("Map/Reduce already running", e.message);
+            }
+
 
             context.response.writePage(form);
         }
@@ -432,6 +470,7 @@ define(['N/ui/serverWidget', 'N/search', 'N/url', 'N/redirect', 'N/runtime', 'N/
                 lineResult.totalAmount = result.getValue(result.columns[2]);
                 lineResult.vendorBillIds = result.getValue(result.columns[3]);
                 lineResult.vendorBillNums = result.getValue(result.columns[4]);
+                lineResult.vendorEntityId = result.getValue(result.columns[5]);
 
                 searchResults.push(lineResult);
 
@@ -440,7 +479,7 @@ define(['N/ui/serverWidget', 'N/search', 'N/url', 'N/redirect', 'N/runtime', 'N/
 
              log.debug("Line Results", searchResults);
              
-            
+            var lastSaturdayDate = getLastSaturdayDate();
             for (var i = 0; i < searchResults.length; i++) {// Code Example 1
                 sublist.setSublistValue({
                     id: 'custpage_vendorname',
@@ -458,7 +497,7 @@ define(['N/ui/serverWidget', 'N/search', 'N/url', 'N/redirect', 'N/runtime', 'N/
                     id: 'custpage_vendorpdf',
                     line: i,
                    // value: SETTLEMENT_URL + "&vendor=" + searchResults[i].vendorId
-                    value: "<a href='" + previewBillsURL + "&vendorId="+ searchResults[i].vendorId +"&billIds=" + searchResults[i].vendorBillIds + "'  target='_blank'> Preview Vendor Bills </a>"
+                    value: "<a href='" + previewBillsURL + "&vendorId="+ searchResults[i].vendorEntityId +"&weekOfDate=" + lastSaturdayDate + "'  target='_blank'> Preview Vendor Bills </a>"
                 });
     
 
