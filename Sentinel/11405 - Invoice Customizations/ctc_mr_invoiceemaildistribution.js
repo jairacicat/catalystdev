@@ -1,4 +1,3 @@
-
 /**
 * Copyright (c) 2020 Catalyst Tech Corp
 * All Rights Reserved.
@@ -117,18 +116,6 @@ define(['N/file', 'N/search', 'N/record', 'N/runtime', 'N/render', 'N/email'],
                 sendEmail(toEmail, ccEmail, bccEmail, invoiceEmailTo, customerId, invoicePDF, invoiceId, tranId, mergeResult)
                 
             }
-
-        
-            const recordType = runtime.getCurrentScript().getParameter({name: SPARAM_RECORD_TYPE});
-            //Update Invoice:
-            record.submitFields({
-                type: recordType,
-                id: invoiceId,
-                values: {
-                    "custbody_ctc_invoice_email_sent" : true
-                },
-                ignoreMandatoryFields: true
-            })
         }
         catch(o_exception)
         {
@@ -157,7 +144,8 @@ define(['N/file', 'N/search', 'N/record', 'N/runtime', 'N/render', 'N/email'],
          
         }else{
             if(toEmail.length == 0 ){
-                toEmail = ["SentinelAR@sentinel.com"]
+                toEmail = ["SentinelAR@sentinel.com"];
+                emailObject["recipients"] = toEmail;
             }
             
             if(toEmail != "" || (toEmail.length > 0 && toEmail[0] != "")){
@@ -172,7 +160,23 @@ define(['N/file', 'N/search', 'N/record', 'N/runtime', 'N/render', 'N/email'],
         }
        
         log.debug("emailObject", emailObject);
-        email.send(emailObject);
+        try{
+            email.send(emailObject);
+        }
+        catch(e){
+            log.error("Error in sending Email", e);
+            return;
+        }
+        const recordType = runtime.getCurrentScript().getParameter({name: SPARAM_RECORD_TYPE});
+        //Update Invoice:
+        record.submitFields({
+            type: recordType,
+            id: invoiceId,
+            values: {
+                "custbody_ctc_invoice_email_sent" : true
+            },
+            ignoreMandatoryFields: true
+        })
         log.debug('Email Sent')
     }
 

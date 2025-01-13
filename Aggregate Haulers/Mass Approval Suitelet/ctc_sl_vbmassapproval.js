@@ -77,7 +77,7 @@ define(['N/ui/serverWidget', 'N/search', 'N/url', 'N/redirect', 'N/runtime', 'N/
                 };
 
                 //Gather POST values:
-                LOG_RECORD_VALUES.LOG.CREATED_BY = runtime.getCurrentUser().id;
+               // LOG_RECORD_VALUES.LOG.CREATED_BY = runtime.getCurrentUser().id;
                 LOG_RECORD_VALUES.LOG.STATUS = "PENDING";
                 if(context.request.parameters.custpage_datefrom){
                     LOG_RECORD_VALUES.LOG.DATE_FROM = new Date(context.request.parameters.custpage_datefrom);
