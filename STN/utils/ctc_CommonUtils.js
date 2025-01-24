@@ -101,7 +101,7 @@ function(error, record, runtime, url, search) {
            } else {
                resultArr = getAllResults(allColSearch, useLabel);
            }
-           return resultArr;
+           return resultArr[0];
 
        } catch (e) {
            log.error({
@@ -134,13 +134,45 @@ function(error, record, runtime, url, search) {
                        }	
                    }	
                });	
-               searchResults.push(resultObj);	
+               log.debug('reslult', resultObj)
+               searchResults.push(createIssuePayload(resultObj));	
                searchid++;
            });
        }
       
        return searchResults;
    }
+   function createIssuePayload(result) {
+    return {
+      "fields": {
+        "description": {
+          "content": [
+            {
+              "content": [
+                {
+                  "text": result.contentText,
+                  "type": "text"
+                }
+              ],
+              "type": "paragraph"
+            }
+          ],
+          "type": "doc",
+          "version": 1
+        },
+        "duedate": "2019-05-11",  // Static value for example; change as needed
+        "issuetype": {
+          "id": "10000"  // Static value for example; change as needed
+        },
+        "labels": [result.labelsValues],
+        "project": {
+          "id": result.projectName  // Assuming 'id' should be 'projectId' which is your dynamic value
+        },
+        "summary": result.summaryText
+      },
+      "update": {}
+    };
+  }
    function getScriptParamValue(paramField) {
        try {
            if (!isEmpty(paramField)) {

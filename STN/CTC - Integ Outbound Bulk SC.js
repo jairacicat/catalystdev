@@ -101,7 +101,7 @@
                 groupBy = recObj.SAVED_SEARCH_GROUPBY
             }
 
-            combinedArr = srch1.concat(srch2);
+            combinedArr = srch1//.concat(srch2);
             log.debug("combinedArr", combinedArr);
             if (!utils.isEmpty(groupBy)) {
             let groupByField = utils.groupBy(combinedArr, groupBy);
