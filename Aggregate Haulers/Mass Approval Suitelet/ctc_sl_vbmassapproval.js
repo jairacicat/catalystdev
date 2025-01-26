@@ -315,6 +315,17 @@ define(['N/ui/serverWidget', 'N/search', 'N/url', 'N/redirect', 'N/runtime', 'N/
                 vendorField.defaultValue = parameters.vendor
             }
 
+            // Add Location filter
+            var locationField = form.addField({
+                id: 'custpage_location',
+                type: ui.FieldType.SELECT,
+                label: 'Location',
+                source: 'location' // Netsuite's internal location list
+            });
+            if(parameters.location){
+                locationField.defaultValue = parameters.location
+            }
+
             // Add Submit and Apply Filters buttons
             form.addSubmitButton({ label: 'Submit' });
             form.addButton({
@@ -348,6 +359,12 @@ define(['N/ui/serverWidget', 'N/search', 'N/url', 'N/redirect', 'N/runtime', 'N/
                 id: 'custpage_vendorname',
                 type: ui.FieldType.TEXT,
                 label: 'Vendor Name'
+            });
+
+            sublist.addField({
+                id: 'custpage_locationcol',
+                type: ui.FieldType.TEXT,
+                label: 'Location'
             });
 
             sublist.addField({
@@ -413,7 +430,7 @@ define(['N/ui/serverWidget', 'N/search', 'N/url', 'N/redirect', 'N/runtime', 'N/
 
         function populateVendorList(sublist, filters) {
             const SS_ID = runtime.getCurrentScript().getParameter({name: SPARAM_SEARCH});
-            log.debug("popuateVendorList", filters);
+            log.debug("populateVendorList", filters);
 
             let previewBillsURL = url.resolveScript({
                 deploymentId: 'customdeploy_ctc_sl_printvendorbills',
@@ -448,13 +465,22 @@ define(['N/ui/serverWidget', 'N/search', 'N/url', 'N/redirect', 'N/runtime', 'N/
                 searchFilters.push(dateToFilter)
             }
             if(filters.vendor){
-                let dateToFilter = search.createFilter({
+                let vendorFilter = search.createFilter({
                     name: 'internalid',
                     join: 'vendor',
                     operator: 'anyof',
                     values: filters.vendor
                 });
-                searchFilters.push(dateToFilter)
+                searchFilters.push(vendorFilter)
+            }
+            if(filters.location){
+                let locationFilter = search.createFilter({
+                    name: 'internalid',
+                    join: 'location',
+                    operator: 'anyof',
+                    values: filters.location
+                });
+                searchFilters.push(locationFilter)
             }
             vendorSearch.filters = searchFilters;
     
@@ -471,6 +497,7 @@ define(['N/ui/serverWidget', 'N/search', 'N/url', 'N/redirect', 'N/runtime', 'N/
                 lineResult.vendorBillIds = result.getValue(result.columns[3]);
                 lineResult.vendorBillNums = result.getValue(result.columns[4]);
                 lineResult.vendorEntityId = result.getValue(result.columns[5]);
+                lineResult.location = result.getText(result.columns[6]);
 
                 searchResults.push(lineResult);
 
@@ -512,6 +539,14 @@ define(['N/ui/serverWidget', 'N/search', 'N/url', 'N/redirect', 'N/runtime', 'N/
                     line: i,
                     value: searchResults[i].vendorBillNums
                 });
+
+
+                sublist.setSublistValue({
+                    id: 'custpage_locationcol',
+                    line: i,
+                    value: searchResults[i].location
+                });
+
 
 
                 let vendorBillIds = searchResults[i].vendorBillIds.split(",");
