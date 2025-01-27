@@ -9,7 +9,7 @@
  * with Catalyst Tech.
  *
  * Project Number: STN - Jira-NS Integration
- * Script Name: CTC - Create Project & Epic UE.js
+ * Script Name: CTC - Create Project & Epic UE
  * Author: jaira@nscatalyst.com
  * @NApiVersion 2.1
  * @NScriptType UserEventScript
@@ -22,8 +22,8 @@
  *
  */
 
-define(['N/record', 'N/https', 'N/runtime', 'N/search', 'N/url'],
-    function(record, https, runtime, search, url) {
+define(['N/record', 'N/https', 'N/search', 'N/url'],
+    function(record, https, search, url) {
 
         const FLD_OPPORTUNITY_ID = 'custbody_ctc_opportunityid';
         const FLD_JIRA_PROJECT_ID = 'custentity_ctc_jira_id'
