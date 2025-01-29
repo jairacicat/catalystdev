@@ -39,6 +39,7 @@ define(['N/currentRecord', 'N/url'], function(currentRecord, url) {
         var dateFrom = currentRec.getText({ fieldId: 'custpage_datefrom' });
         var dateTo = currentRec.getText({ fieldId: 'custpage_dateto' });
         var vendorId = currentRec.getValue({ fieldId: 'custpage_vendor' });
+        var location = currentRec.getValue({ fieldId: 'custpage_location' });
 
         // Build the URL with the filter parameters
         var suiteletUrl = url.resolveScript({
@@ -50,7 +51,8 @@ define(['N/currentRecord', 'N/url'], function(currentRecord, url) {
             datefrom: dateFrom ? dateFrom : '',
             dateto: dateTo ? dateTo : '',
             vendor: vendorId ? vendorId : '',
-            applyfilters: true
+            applyfilters: true,
+            location: location ? location : ''
         };
 
         // Construct the full URL with query parameters

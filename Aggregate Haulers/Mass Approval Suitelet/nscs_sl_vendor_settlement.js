@@ -1652,8 +1652,24 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
                             });
                         }
                         catch(err2){
-                            log.error("Error in calling M/R", err2);
-                        }
+                            log.error("Error in calling M/R", err2)
+                            log.debug("error details", err2.message)
+                            if(err2.name==='MAP_REDUCE_ALREADY_RUNNING'){
+                                //var html = '<!DOCTYPE html>'+'<html lang="en">'+'<head>'+'<meta charset="UTF-8">'+'<title>Map Reduce Error</title>'+'</head>\n' +
+                                    '<body>'+'<p><b>The Map/Reduce script to generate Owner statements is currently still running. Please wait to generate this statement until after the script has completed execution. You can view the Map Reduce status page here:</b></p>'+'<p width="80%">https://8152306.app.netsuite.com/app/common/scripting/mapreducescriptstatus.nl?daterange=CUSTOM&datefrom=&dateto=10%2F24%2F2024&scripttype=1201&primarykey=1938&jobstatefilterselect=&sortcol=dateCreated&sortdir=DESC&csv=HTML&OfficeXML=F&pdf=&size=50&_csrf=lGhXrrMN09hi3aEDvMAjcle4Wmo1mIGkjOPf7kXD0Y-yR5Vk6fFLxCSv9wKIjeijbK6RUqIt4iJq-xyUIR8os11Y65nwOnvy5Fner6OMmEtK7wsDVqwGte3dcgkxFoly8wNECVbN9P6Nz8nfmaBlitZockvJsmujJG9iQFXaGUg%3D&datemodi=WITHIN&date=CUSTOM&showall=F</p>'+'</body>\n' +
+                                    '</html>'
+                                var redirectLink = scriptObjPost.getParameter('custscript_ns_redirect_link');
+                                redirect.redirect({
+                                    url: redirectLink
+                                });
+
+                            }else{
+                                var html = '<!DOCTYPE html>'+'<html lang="en">'+'<head>'+'<meta charset="UTF-8">'+'<title>Map Reduce Error</title>'+'</head>\n' +
+                                    '<body>'+'<p><b>'+err2.message+'</b></p>'+'</body>\n' +
+                                    '</html>'
+                            }
+                            scriptContext.response.write(html);
+                       }
 
                     }
                 }

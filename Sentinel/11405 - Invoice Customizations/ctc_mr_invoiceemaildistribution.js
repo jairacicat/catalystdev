@@ -1,4 +1,3 @@
-
 /**
 * Copyright (c) 2020 Catalyst Tech Corp
 * All Rights Reserved.
@@ -145,7 +144,8 @@ define(['N/file', 'N/search', 'N/record', 'N/runtime', 'N/render', 'N/email'],
          
         }else{
             if(toEmail.length == 0 ){
-                toEmail = ["SentinelAR@sentinel.com"]
+                toEmail = ["SentinelAR@sentinel.com"];
+                emailObject["recipients"] = toEmail;
             }
             
             if(toEmail != "" || (toEmail.length > 0 && toEmail[0] != "")){

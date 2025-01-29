@@ -17,6 +17,7 @@ define(['N/config', 'N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 
 
         const SPARAM_VENDOR_SS = 'custscript_vendors_for_processing';
         const SPARAM_CALLED_BY_EMAIL_AUTOMATION = 'custscript_calledbyemailautomation';
+        const SPARAM_FOR_MASS_APPROVAL = 'custscript_formassapproval';
 
         function formatDate(dateValue){
             var newDate = ((dateValue.getMonth() > 8) ? (dateValue.getMonth() + 1) : ('0' + (dateValue.getMonth() + 1))) + '/' + ((dateValue.getDate() > 9) ? dateValue.getDate() : ('0' + dateValue.getDate())) + '/' + dateValue.getFullYear();
@@ -1458,10 +1459,22 @@ define(['N/config', 'N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 
                 log.debug("", "------map------");
                 log.debug('Context-map', mapContext);
                 var mapValues = JSON.parse(mapContext.value);
-                mapContext.write({
-                    key: mapContext.key, //mapValues.recordid,
-                    value: mapValues.values.custentity_ctc_statement_date//mapValues.weekOf
-                });
+
+                var forMassApproval = runtime.getCurrentScript().getParameter({name: SPARAM_FOR_MASS_APPROVAL});
+                if(forMassApproval == 'T' || forMassApproval == true){
+                    var lastSaturday =  getLastSaturdayDate();
+                    var vendorId = mapValues.values["GROUP(internalid.vendor)"].value
+                    mapContext.write({
+                        key: vendorId, //mapValues.recordid,
+                        value: lastSaturday
+                    });
+                }
+                else{
+                    mapContext.write({
+                        key: mapContext.key, //mapValues.recordid,
+                        value: mapValues.values.custentity_ctc_statement_date//mapValues.weekOf
+                    });
+                }
             }catch(error){
                 log.error("map Error", error)
             }
@@ -1489,6 +1502,13 @@ define(['N/config', 'N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 
                 log.debug("reduceContext", reduceContext)
                 var recID = reduceContext.key;
                 var rawDate = reduceContext.values[0];
+                log.debug("rawDate -- before", rawDate);
+                if(rawDate == null || rawDate == '' || rawDate == undefined){
+                    rawDate = getLastSaturdayDate();
+                    log.debug("rawDate -- after", rawDate);
+                }
+                log.debug("recID", recID);
+                log.debug("rawDate", rawDate);
                 var xmlTemplateFile = file.load('SuiteScripts/nscs_xml_vendor_settlement.xml');
                 var renderer = render.create();
                 renderer.templateContent = xmlTemplateFile.getContents();
@@ -1688,6 +1708,27 @@ define(['N/config', 'N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 
                 log.error('Error', error)
             }
         }
+        function getLastSaturdayDate() {
+            const today = new Date();
+            const dayOfWeek = today.getDay();  // Get the current day of the week (0 is Sunday, 6 is Saturday)
+            const lastSaturday = new Date(today);
+        
+            // Calculate the number of days to subtract to get to the last Saturday
+            // If today is Sunday (0), subtract 1 day more than usual to get the previous week's Saturday.
+            if (dayOfWeek === 0) {  // Special case for Sunday
+                lastSaturday.setDate(today.getDate() - 8);
+            } else {
+                lastSaturday.setDate(today.getDate() - (dayOfWeek + 1));
+            }
+        
+            // Padding month and day to ensure MM/DD/YYYY format
+            const dd = String(lastSaturday.getDate()).padStart(2, '0');
+            const mm = String(lastSaturday.getMonth() + 1).padStart(2, '0'); // January is 0!
+            const yyyy = lastSaturday.getFullYear();
+        
+            return mm + '/' + dd + '/' + yyyy;  // Return formatted date string
+        }
+        
 
         return {getInputData, map, reduce, summarize}
 
