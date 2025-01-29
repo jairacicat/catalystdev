@@ -3,6 +3,8 @@
  * 1.0          07.11.2024   plee            All webhook for CU and CWM tickets. Webhook for CU to CWM time entry for date today.
  * 2.0          07.11.2024   jcicat          Added webhook logic for CU and and CWM Time Entry.
  * 3.0          10.24.2024   jcicat          Disable (Comment out) time integration
+ * 4.0          11.06.2024   ajdeleon        Updated the cu to cwm time entry and added call for scheduled script
+ *                                           Fixed undefined error if JSONDataEntity is null
  */
 
 
@@ -535,7 +537,35 @@ function mainPage(request, response)
                 }
             }
             //Time Entry created
-            /*
+            if (JSONData.event == 'taskTimeTrackedUpdated') {
+
+                //get time start here - for some reason it does not work in the other script.
+                var timeStart = 0;
+                var historyItemsArr = JSONData.history_items;
+                if (historyItemsArr && historyItemsArr.length > 0) {
+                    if (historyItemsArr[0].after) {
+                        timeStart = prepStartTime(parseInt(historyItemsArr[0].after.start));
+                    }
+                }
+
+                //search for open deployment
+                var stSsDeploymentId = createScriptDeploymentIfBusy(506);
+                nlapiLogExecution('DEBUG','createScriptDeploymentIfBusy|stSsDeploymentId',stSsDeploymentId);
+
+                //call scheduled script
+                nlapiScheduleScript(
+                    'customscript_ctc_cu_cwm_integration', 
+                    stSsDeploymentId,
+                    {
+                        custscript_cu_cwm_payload:JSON.stringify(JSONData),
+                        custscript_cu_cwm_userintegid:CU_SYSTEM_INTEGRATION_ID,
+                        custscript_cu_cwm_accountid:CW_ACCOUNT_ID,
+                        custscript_cu_cwm_timestart:timeStart
+
+                    }   
+                );
+            }
+           /*
             if (JSONData.event == 'taskTimeTrackedUpdated') {
                 var timeId = '';
                 var timeSeconds = 0;
@@ -629,22 +659,37 @@ function mainPage(request, response)
                 }
             }
             */
+
             //budget hours on task
             if (JSONData.event == 'taskUpdated') {
                 var historyItemsArr = JSONData.history_items;
                 var newTaskToCreate = false;
                 //nlapiLogExecution('AUDIT', 'History Items Length: ' + historyItemsArr.length);
                 //search for task_creation history item on payload
-                for (var b = 0; b < historyItemsArr.length; b++) {
-                    if(historyItemsArr[b].custom_field) {
-                        if (historyItemsArr[b].custom_field.name == 'CW Contact Email') {
-                            nlapiLogExecution('AUDIT', 'New Contact Email: ' + historyItemsArr[b].after);
-                            if (historyItemsArr[b].before == null && historyItemsArr[b].after != null && historyItemsArr[b].after != '') {
-                                newTaskToCreate = true;
-                                lastUpdatedDate = historyItemsArr[b].date;
-                                userName = historyItemsArr[b].user.username;
-                                userId = historyItemsArr[b].user.id.toString();
-                                messageLog = messageLog + '\n' + nlapiDateToString(new Date(), 'datetime') + ': [INFO]: EDITED a CU Task and populated a blank CW Contact Email field - Attemping to Create a CWM Ticket ';
+
+                if(Array.isArray(historyItemsArr)){
+                    for (var b = 0; b < historyItemsArr.length; b++) {
+                        if(historyItemsArr[b].custom_field) {
+                            if (historyItemsArr[b].custom_field.name == 'CW Contact Email') {
+                                nlapiLogExecution('AUDIT', 'New Contact Email: ' + historyItemsArr[b].after);
+                                if (historyItemsArr[b].before == null && historyItemsArr[b].after != null && historyItemsArr[b].after != '') {
+                                    newTaskToCreate = true;
+                                    lastUpdatedDate = historyItemsArr[b].date;
+                                    userName = historyItemsArr[b].user.username;
+                                    userId = historyItemsArr[b].user.id.toString();
+                                    messageLog = messageLog + '\n' + nlapiDateToString(new Date(), 'datetime') + ': [INFO]: EDITED a CU Task and populated a blank CW Contact Email field - Attemping to Create a CWM Ticket ';
+                                }
+                                else if((historyItemsArr[b].before!==historyItemsArr[b].after) && historyItemsArr[b].after){
+                                    var taskObject = getTaskTicketId(JSONData.task_id);
+                                    var cwTicketId = '';
+                                    cwTicketId = taskObject.cwticketid;
+                                    messageLog = messageLog + '\n' + nlapiDateToString(new Date(), 'datetime') + ': [Integration Callback Received]: Processing Clickup to CWM integration request...';
+                                    messageLog = messageLog + '\n' + nlapiDateToString(new Date(), 'datetime') + ': [Integration Processing]: Update email - Before: '+historyItemsArr[b].before+' After: '+historyItemsArr[b].after;
+                                    messageLog = messageLog + '\n' + taskObject.message;
+
+                                    // logRecordId = createLog(JSONPayloadString, CLICKUP_NAME, initialLogStatus, request.getMethod(), JSONData.event, CWM_NAME, lastUpdatedDate, JSONData.task_id, cwTicketId, messageLog, 'ticket', 'Update CWM Ticket Email', userName, userId, CU_BASE_URL + '/t/' + JSONData.task_id, JSONData.webhook_id);
+                                    updateCWMTicketStatus(cwTicketId, null, logRecordId, taskObject.isprojectticket,historyItemsArr[b].after);
+                                }
                             }
                         }
                     }
@@ -941,7 +986,7 @@ function mainPage(request, response)
                     var entityId = '';
                     //Service Ticket from CWM push as Task on CU
                     var JSONDataEntity = JSON.parse(JSONData.Entity);
-                    if (JSONDataEntity._info) {
+                    if (JSONDataEntity && JSONDataEntity._info) {
                         nlapiLogExecution("EMERGENCY", "CWM_API_MEMBER_NAME", CWM_API_MEMBER_NAME);
                         nlapiLogExecution("EMERGENCY", "JSONDataEntity._info.updatedBy", JSONDataEntity._info.updatedBy);
                         if (JSONDataEntity._info.updatedBy != CWM_API_MEMBER_NAME) {
@@ -1002,12 +1047,13 @@ function mainPage(request, response)
                                 }
                             }
 
-                            //Create/Update CU Time from CWM
-                            /*
+                            //Create/Update CU Time from CWM                  
                             if (JSONData.Type == 'time'){   
                                     var cwmTimeId = JSONDataEntity.id;
                                     var requestString = "time/entries/";
                                     var cwmTimeObject = getJSONData(requestString + cwmTimeId, 1, 1, 1, null, null, null, CW_ACCOUNT_ID);
+
+                                    nlapiLogExecution('DEBUG','cwmTimeObject',JSON.stringify(cwmTimeObject));
 
                                     var cuTaskId, cuTimeId, cuSubTaskId;
                                     var cwmTimeObjectCustomFields = cwmTimeObject.customFields;
@@ -1134,7 +1180,6 @@ function mainPage(request, response)
                                     //Do not loopback (if updated by ClickUpv2, it will not trigger)
                                
                             }
-                            */
                         }
                     }
                 }
@@ -1979,7 +2024,7 @@ function updateCWMTicketBudgetHours(cwTicketId, budgetHours, logRecordId, isProj
 
 }
 
-function updateCWMTicketStatus(cwTicketId, statusUpdate, logRecordId, isProjectTicket) {
+function updateCWMTicketStatus(cwTicketId, statusUpdate, logRecordId, isProjectTicket,emailUpdate) {
 
     var messageLog = '';
     var postRequest;
@@ -1992,12 +2037,12 @@ function updateCWMTicketStatus(cwTicketId, statusUpdate, logRecordId, isProjectT
         requestString = 'project/tickets/';
 
     try {
-        if(cwTicketId && statusUpdate) {
+        if(cwTicketId) {
 
             //grab some existing info first in manage
             var cwTicketObject = getJSONData(requestString + cwTicketId, 1, 1, 1, null, null, null, CW_ACCOUNT_ID);
 
-            if (cwTicketObject) {
+            if (cwTicketObject && statusUpdate) {
                 //company id on cw manage, required additional headers for attaching a contact record to company
                 var JSONPostObject = cwTicketObject;
 
@@ -2007,6 +2052,10 @@ function updateCWMTicketStatus(cwTicketId, statusUpdate, logRecordId, isProjectT
                 //added 8/7/2023
                 cwTicketObject.customerUpdatedFlag = false;
 
+            }
+            else if(emailUpdate){
+                var JSONPostObject = cwTicketObject;
+                JSONPostObject.contactEmailAddress = emailUpdate;
             }
 
             nlapiLogExecution('AUDIT', 'JSON PUT for CW Account ID: ' + CW_ACCOUNT_ID, JSON.stringify(JSONPostObject));
@@ -4004,4 +4053,46 @@ function getCUTaskIDfromCWMTicket(cwmTicketType, cwmTicketId){
         nlapiLogExecution('ERROR','CU Task ID not found in CWM Ticket ' + cwmTicketId, err);
     }
     return cuTicketId;
+}
+
+function createScriptDeploymentIfBusy(scriptId){
+
+        var searchresults = nlapiSearchRecord("scriptdeployment",null,
+            [
+               ["script.internalid","anyof",scriptId], 
+            ],
+            [
+                new nlobjSearchColumn("status"),
+                new nlobjSearchColumn("internalid")
+            ]
+        );
+
+        var countScriptDeploy = searchresults.length;
+
+        var isBusy = true;
+        var stDeploymentId = "";
+        for(var i=0; i<searchresults.length; i++){
+            var stStatus = searchresults[i].getValue('status');
+            stDeploymentId = searchresults[i].getValue('internalid');
+
+            if(stStatus=="NOTSCHEDULED" || stStatus=="COMPLETED" || stStatus=="RELEASED"){
+                isBusy = false;
+                break;
+            }
+        }
+
+        if(isBusy===true && stDeploymentId){
+            var objScriptDeploy = nlapiCopyRecord('scriptdeployment',stDeploymentId);
+
+            var deployScriptId = '_ctc_cu_cwm_integration'+(countScriptDeploy+1);
+
+            objScriptDeploy.setFieldValue('scriptid',deployScriptId);
+            var newDeployId = nlapiSubmitRecord(objScriptDeploy);
+
+            if(newDeployId){
+                return 'customdeploy'+deployScriptId;
+            }
+        }
+
+        return null;
 }
