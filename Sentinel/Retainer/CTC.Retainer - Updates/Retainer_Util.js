@@ -92,6 +92,11 @@ define(['N/record', 'N/search', 'N/log', 'N/currentRecord'],
                 });
 
                 retainerRecord.setValue({
+                    fieldId: 'custrecord_ctc_rtnr_beginningbal',
+                    value: retainerAmount
+                });
+
+                retainerRecord.setValue({
                     fieldId: 'custrecord_ctc_rtnr_total_bgt_remaining',
                     value: retainerAmount
                 });
