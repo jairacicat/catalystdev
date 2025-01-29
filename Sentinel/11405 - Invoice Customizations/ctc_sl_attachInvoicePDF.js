@@ -23,8 +23,8 @@
  * 3.00         Sept 30, 2024               jaira@nscatalyst.com                    Add logic for non-SuiteBilling/non-Service Tickets Invoice
  */
  
-define(['N/search', 'N/url', 'N/runtime', 'N/file'], 
-    function(search, url, runtime, file) 
+define(['N/search', 'N/url', 'N/runtime', 'N/file', 'N/record'], 
+    function(search, url, runtime, file, record) 
     {
 
         const SPARAM_FOLDER = 'custscript_invoice_pdf_folder';
@@ -48,18 +48,22 @@ define(['N/search', 'N/url', 'N/runtime', 'N/file'],
                 log.debug("URL_DOMAIN", URL_DOMAIN);
 
                 let INVOICE_REC = record.load({
-                    type: invoiceType,
+                    type: record.Type.INVOICE,
                     id: invoiceId
                 });
 
                 let invoiceAttachment = INVOICE_REC.getValue({fieldId: 'custbody_so_invoice_body_attachment'}).toLowerCase();
+                let invoiceAttachmentFlag = checkInvoiceAttachment(invoiceAttachment);
+                log.debug("Invoice Attachment field", invoiceAttachment);
+                log.debug("No detail found", invoiceAttachmentFlag)
+                
 
                 //If Invoice Type = Service, attach all PDFs in the Invoice's Files tab.
                 if(invoiceType == 'service'){
                     let returnXML = "&nbsp;";
                     log.debug("Service - Invoice ID", invoiceId);
 
-                    if(invoiceId && (invoiceAttachment.indexOf("no detail") > -1 )){
+                    if(invoiceId){
                         let pdfsOnInvoice = getPDFsOnInvoice(invoiceId);
                         log.debug("PDFS on Invoice", pdfsOnInvoice);
                         if(pdfsOnInvoice.length > 0){
@@ -78,7 +82,7 @@ define(['N/search', 'N/url', 'N/runtime', 'N/file'],
                 //If Invoice Type = SuiteBilling, get Invoice PDF from the FileCabinet folder.
                 //Get the filename from the field 
                 else if(invoiceType == 'suitebilling'){
-                    let returnXML = "";
+                    var returnXMLSuiteBilling = "&nbsp;";
                     const attachmentTextLookup = search.lookupFields({
                         type: search.Type.INVOICE,
                         id: invoiceId,
@@ -87,19 +91,23 @@ define(['N/search', 'N/url', 'N/runtime', 'N/file'],
                     const attachmentText = attachmentTextLookup[FLD_INVOICE_ATTACHMENT];
                     log.debug("SuiteBilling - Invoice ID", invoiceId);
                     log.debug("SuiteBilling - Attachment Text", attachmentText);
-
-                    if(invoiceId && attachmentText && (invoiceAttachment.indexOf("no detail") > -1 )){
+                    //
+                    if(invoiceId && attachmentText && invoiceAttachmentFlag != true){
                         let pdfToAttach = getPDFFromFileCabinet(formatString(attachmentText));
                         log.debug("PDF to Attach", pdfToAttach);
                         if(pdfToAttach != ''){
-                            var cleanURL = pdfToAttach.replaceAll('&', '&amp;');
+                            var cleanURL = pdfToAttach.replaceAll("&", "&amp;");
                             log.debug("cleanURL", cleanURL);
-                            returnXML = returnXML + "<pdf src='"+URL_DOMAIN+cleanURL+"'></pdf>";
+                            log.debug(" URL DOMAIN", URL_DOMAIN);
+                            var urlToAttach =  URL_DOMAIN + cleanURL;
+                            log.debug("URL to attach", urlToAttach.replace("&", "&amp;"))
+                            returnXMLSuiteBilling = returnXMLSuiteBilling.toString() + ("<pdf src='"+ urlToAttach + "'></pdf>").toString();
+                            log.debug("returnXMLSuiteBilling", JSON.stringify(returnXMLSuiteBilling))
                         }
                     }
-                    log.debug("returnXML", returnXML);
+                    log.debug("returnXML", JSON.stringify(returnXMLSuiteBilling));
 
-                    context.response.write(returnXML);
+                    context.response.write(JSON.stringify(returnXMLSuiteBilling));
 
                 }
                 else{
@@ -110,7 +118,7 @@ define(['N/search', 'N/url', 'N/runtime', 'N/file'],
                     let transactionTexts = getRelatedTransactions(invoiceId);
                     log.debug("transactionTexts", transactionTexts);
 
-                    if(invoiceId && transactionTexts && (invoiceAttachment.indexOf("no detail") > -1 )){
+                    if(invoiceId && transactionTexts){
                         let pdfToAttach = getPDFFromFileCabinet2(transactionTexts);
                         log.debug("PDF to Attach", pdfToAttach);
                         if(pdfToAttach != ''){
@@ -120,7 +128,7 @@ define(['N/search', 'N/url', 'N/runtime', 'N/file'],
                     }
                     log.debug("returnXML", returnXML);
 
-                    context.response.write( returnXML);
+                    context.response.write(returnXML);
                 }
             }
             catch(o_exception)
@@ -140,6 +148,21 @@ define(['N/search', 'N/url', 'N/runtime', 'N/file'],
 
             return scheme + host;
         }
+
+        function checkInvoiceAttachment(attachmentText) {
+            // Regular expressions for matching the patterns
+            const patterns = [
+                /^no\s+detail/i, // Matches "No detail" with any case and allows for extra spaces
+                /not\s+(a\s+)?part.*?of.*?jk.*?import/i, // Matches variations of "not part of JK import" and "not a part of JK import" with words/characters in between
+                /may.*?not.*?be.*?a.*?part.*?of.*?jk.*?import/i, // Matches "MAY NOT BE A PART OF JK IMPORT" with any words/characters in between
+                /arc.*?only/i // Matches "ARC only" with any words/characters in between
+            ];
+        
+            // Trim the input text and test against all patterns
+            const trimmedText = attachmentText.trim();
+            return patterns.some(pattern => pattern.test(trimmedText));
+        }
+            
 
         function formatString(input) {
             // Replace all spaces and dashes with '%'
