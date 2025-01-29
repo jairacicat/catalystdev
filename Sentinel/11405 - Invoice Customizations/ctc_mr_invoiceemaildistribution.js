@@ -92,10 +92,10 @@ define(['N/file', 'N/search', 'N/record', 'N/runtime', 'N/render', 'N/email'],
 
             //get customer emails:
             const customerId = parseInt(mapValues.entity.value);
-            const toEmail = mapValues["custentity_sti_to_invoice_emails.customerMain"].split(",").map(i => i.trim());
-            const ccEmail = mapValues["custentity_sti_cc_invoice_emails.customerMain"].split(",").map(i => i.trim());
-            const bccEmail = mapValues["custentity_sti_bcc_invoice_emails.customerMain"].split(",").map(i => i.trim());
-            const invoiceEmailTo = mapValues["custbody_ctc_emailinvoiceto"].split(",").map(i => i.trim());
+            const toEmail = removeBlanks(mapValues["custentity_sti_to_invoice_emails.customerMain"].split(",").map(i => i.trim()));
+            const ccEmail = removeBlanks(mapValues["custentity_sti_cc_invoice_emails.customerMain"].split(",").map(i => i.trim()));
+            const bccEmail = removeBlanks(mapValues["custentity_sti_bcc_invoice_emails.customerMain"].split(",").map(i => i.trim()));
+            const invoiceEmailTo = removeBlanks(mapValues["custbody_ctc_emailinvoiceto"].split(",").map(i => i.trim()));
             const tranId = mapValues.tranid;
             log.debug("invoiceEmailTo", invoiceEmailTo);
 
@@ -138,28 +138,29 @@ define(['N/file', 'N/search', 'N/record', 'N/runtime', 'N/render', 'N/email'],
             replyTo: "SentinelAR@Sentinel.com"
         };
 
-
-        if(invoiceEmailTo != ""){
+       
+        if(invoiceEmailTo.length > 0){
+          
             emailObject["recipients"] = invoiceEmailTo;
          
         }else{
-            if(toEmail.length == 0 ){
+           
+            if((toEmail.length > 0)){
+                emailObject["recipients"] = toEmail;
+            }
+            else{
                 toEmail = ["SentinelAR@sentinel.com"];
                 emailObject["recipients"] = toEmail;
             }
-            
-            if(toEmail != "" || (toEmail.length > 0 && toEmail[0] != "")){
-                emailObject["recipients"] = toEmail;
-            }
-            if(ccEmail.length > 0 && ccEmail[0]!= ""){
+            if(ccEmail.length > 0){
                 emailObject["cc"] = ccEmail;
             }
-            if(bccEmail.length > 0 && bccEmail[0]!= ""){
+            if(bccEmail.length > 0 ){
                 emailObject["bcc"] = bccEmail
             }
         }
-       
-        log.debug("emailObject", emailObject);
+
+
         try{
             email.send(emailObject);
         }
@@ -181,6 +182,9 @@ define(['N/file', 'N/search', 'N/record', 'N/runtime', 'N/render', 'N/email'],
     }
 
 
+    function removeBlanks(array) {
+        return array.filter(item => item !== null && item !== undefined && item.toString().trim() !== '');
+    }
    
     // The reduce function is invoked one time for each of the key/value pairs
     // provided.
