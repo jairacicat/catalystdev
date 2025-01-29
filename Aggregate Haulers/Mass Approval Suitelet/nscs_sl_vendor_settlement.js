@@ -1673,6 +1673,86 @@ define(['N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 'N/runtime',
 
                     }
                 }
+                var scriptObj = runtime.getCurrentScript();
+                var recID = scriptObj.getParameter('custscript_ns_rec_id');
+                var rawDate = scriptObj.getParameter('custscript_ns_weekof_date');
+                var xmlTemplateFile = file.load('SuiteScripts/nscs_xml_vendor_settlement.xml');
+                var renderer = render.create();
+                renderer.templateContent = xmlTemplateFile.getContents();
+                renderer.addRecord('companyInformation', config.load({
+                    type: config.Type.COMPANY_INFORMATION
+                }));
+                var head_arr = [];
+                var headObj = {};
+                var weekofDate = new Date(rawDate);
+                var sevenDaysPrior = new Date(weekofDate - 8 * 24 * 60 * 60 * 1000);
+                var formatPrior = formatDate(sevenDaysPrior);
+                var dateStr = rawDate;
+                var days = 7;
+                var todaysDate = new Date(new Date(dateStr).setDate(new Date(dateStr).getDate() + days));
+                var formatToday = formatDate(todaysDate);
+                days = 13;
+                var pmtDate = new Date(new Date(dateStr).setDate(new Date(dateStr).getDate() + days));
+                var formatPmt = formatDate(pmtDate);
+                log.debug("formatToday", formatToday)
+                days = 7;
+                var rawPrint = new Date((new Date(dateStr).setDate(new Date(dateStr).getDate() + days)));
+                var printDate = formatDate(rawPrint);
+                log.debug("Print Date", printDate)
+                var vendorRec = record.load({type:record.Type.VENDOR,id:recID});
+                renderer.addRecord("record",vendorRec);
+                var subID = vendorRec.getValue('subsidiary');
+                renderer.addRecord('subsidiary', record.load({
+                    type:record.Type.SUBSIDIARY,
+                    id:subID
+                }));
+                var locationID = vendorRec.getValue('custentity2');
+                var emailObj = search.lookupFields({
+                    type:search.Type.LOCATION,
+                    id:locationID,
+                    columns:['custrecordemail_address']
+                });
+                var locationEmail = emailObj.custrecordemail_address;
+                var driverData = getDrivers(recID);
+                var truckID_arr = getTrucks(recID);
+                log.debug('truckID_arr', truckID_arr)
+                var statementData = getStatement(recID,driverData,formatPmt,rawDate,truckID_arr,locationID,formatToday,weekofDate);
+                var leaseData = leaseFees(recID);
+                var fuelData = totalFuel(recID,formatPmt,rawDate,truckID_arr,formatToday);
+                var deductionData = totalDeduction(recID,formatPmt,rawDate,truckID_arr,formatToday);
+                var earningsData = totalEarnings(recID,formatPmt,rawDate,truckID_arr,formatToday);
+                var adjustmentData = getAdjustments(recID,driverData,formatPmt,rawDate,formatToday);
+                headObj.email = locationEmail;
+                headObj.print = printDate;
+                headObj.lease = leaseData;
+                headObj.earnings = earningsData;
+                headObj.fuel = fuelData;
+                headObj.deduction = deductionData;
+                headObj.adjustment = adjustmentData;
+                headObj.ytd = ytdValues(recID,weekofDate,formatToday,driverData,rawDate,truckID_arr);
+                headObj.week = weekValues(recID,rawDate,formatToday,formatPmt,driverData,truckID_arr);
+                headObj.statement = statementData;
+                head_arr.push(headObj);
+                var items = {};
+                items.item = head_arr;
+                log.debug('items Array', 'items:' + JSON.stringify(items))
+                renderer.addCustomDataSource({
+                    format: render.DataSource.JSON,
+                    alias: "ITEMS",
+                    data: JSON.stringify(items)
+                });
+                var vendorObj = search.lookupFields({
+                    type:search.Type.VENDOR,
+                    id:recID,
+                    columns:['entityid']
+                });
+                var entityID = vendorObj.entityid;
+                var folderID = scriptObj.getParameter('custscript_nsts_folder_id');
+                var vendorPDF = renderer.renderAsPdf();
+                vendorPDF.folder = folderID;
+                vendorPDF.name = "vendor_settlement_"+ entityID+weekofDate;
+                var pdfFile =  vendorPDF.save();
+
             }catch(error){
                 log.error("Error", error)
             }
