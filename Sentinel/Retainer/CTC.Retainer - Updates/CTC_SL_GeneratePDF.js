@@ -27,8 +27,6 @@
  */
     //var retainerItem = ['99047', '99196', '99195'] //Retainer - NetSuite (sb)
     var retainerItem = ['118568', '284603', '284604', '71668', '127208']
-    var retainerItemList = [118568, 284603, 284604, 127208, 71668, 53238, 156689, 156686, 53238];
-
     define(['N/file', 'N/render', 'N/search', 'N/log', 'N/redirect', 'N/record',
             'N/config', 'N/ui/serverWidget'],
         function (file, render, search, log, redirect, record, config, serverWidget) {
@@ -139,69 +137,6 @@
                     context.response.writeFile(retainerReport.file);
                 }
     
-var retainerItem = ['118568', '284603', '284604', '71668', '127208']
-var retainerItemList = [118568, 284603, 284604, 127208, 71668, 53238, 156689, 156686, 53238];
-define(['N/file', 'N/render', 'N/search', 'N/log', 'N/redirect', 'N/record',
-        'N/config'],
-    function (file, render, search, log, redirect, record, config) {
-
-        function onRequest(context) {
-            var stLogTitle = 'Generate PDF Suitelet';
-            var request = context.request;
-            var response = context.response;
-            var datasource;
-
-            var custId = context.request.parameters.custparam_custid;
-
-            log.debug({
-                title: stLogTitle,
-                details: 'custId: ' + custId
-            });
-            var companyInfo = config.load({
-                type: config.Type.COMPANY_INFORMATION
-            });
-
-            var logo = companyInfo.getText({
-                fieldId: 'pagelogo'
-            });
-
-            var clogo = file.load({
-                id: 'Images/' + logo
-            });
-
-            if (context.request.method == 'GET') {
-                var custobj = getCustomerInfo(custId);
-                var invoiceResult = getInvoices(custId);
-                var creditMemoResult = getCreditMemo(custId);
-                var today = new Date();
-                var dd = today.getDate();
-                var mm = today.getMonth() + 1;
-                var yyyy = today.getFullYear();
-                today = mm + '/' + dd + '/' + yyyy;
-                var retainerobj = getOpenRetainerDetails(custId);
-
-                datasource = {
-                    logo: clogo.url,
-                    today: today,
-                    custobj: custobj,
-                    invobj: invoiceResult,
-                    cmobj: creditMemoResult,
-                    retainer: retainerobj
-                };
-
-                var htmlTemplate = file
-                    .load({
-                        id: 'SuiteScripts/CTC.Sentinel/CTC.SS2/CTC.Retainer/CTC_RetainerTemplate.html'
-                    });
-
-                var retainerReport = renderPDF(htmlTemplate, datasource, response, custId);
-                context.response.setHeader({name: 'Content-Type', value: 'application/pdf'});
-                context.response.setHeader({
-                    name: 'Content-Disposition',
-                    value: 'inline; filename="' + retainerReport.fileName + '"'
-                });
-                context.response.writeFile(retainerReport.file);
-
             }
     
             /**
