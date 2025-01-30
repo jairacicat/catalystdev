@@ -49,7 +49,7 @@ define(['N/search', 'N/url', 'N/runtime', 'N/file', 'N/record'],
 
                 let invoiceAttachment = search.lookupFields({
                     type: search.Type.INVOICE,
-                    id: invoiceId,
+                    id: parseInt(invoiceId),
                     columns: 'custbody_so_invoice_body_attachment'
                 }).custbody_so_invoice_body_attachment || "";
                 let invoiceAttachmentFlag = checkInvoiceAttachment(invoiceAttachment);

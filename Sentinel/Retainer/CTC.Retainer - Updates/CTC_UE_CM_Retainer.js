@@ -84,8 +84,8 @@ define(['N/record', 'N/search', 'N/log', 'N/runtime', 'SuiteScripts/CTC.Sentinel
                     fieldId: 'amount'
                 });
 
-                //if (retainerItemList.indexOf(itemId) > -1) {
-                if (itemId === rtnrutil.fields.retainerItemId || itemId === rtnrutil.fields.retainerItemId_ir || itemId === rtnrutil.fields.retainerItemId_advisory || itemId === rtnrutil.fields.retainerFortisIr || itemId === rtnrutil.fields.retainerFortisVciso) {
+                if (rtnrutil.fields.retainerItemList.indexOf(parseInt(itemId)) > -1) {
+                //if (itemId === rtnrutil.fields.retainerItemId || itemId === rtnrutil.fields.retainerItemId_ir || itemId === rtnrutil.fields.retainerItemId_advisory || itemId === rtnrutil.fields.retainerFortisIr || itemId === rtnrutil.fields.retainerFortisVciso) {
                     log.debug(stLogTitle, i + ' |itemId: ' + itemId + ' | includes in retainer List');
                     retainerAmount += itemAmount;
                 } else {
