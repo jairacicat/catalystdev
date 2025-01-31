@@ -1646,9 +1646,20 @@ define(['N/config', 'N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 
                     name: SPARAM_VENDOR_SS
                 });
                 // Check if more records remain in the saved search
-                var remainingRecords = search.load({
+                var getInputSS = search.load({
                     id: SS_ID
-                }).run().getRange({ start: 0, end: 1000 }).length;
+                });
+
+                var entityColumn =  search.createColumn({
+                    name: 'entity',
+                    summary: search.Summary.GROUP
+                });
+
+                getInputSS.columns.push(entityColumn);
+                
+                var remainingRecords = getInputSS.run().getRange({ start: 0, end: 1000 });
+                log.debug("remaining Records result", remainingRecords);
+                remainingRecords = remainingRecords.length;
 
                 log.debug("remainingRecords", remainingRecords);
                 var mapKeys = [];
@@ -1659,7 +1670,8 @@ define(['N/config', 'N/file', 'N/format', 'N/record', 'N/redirect', 'N/render', 
                     });
                 log.audit('MAP keys processed', mapKeys);
 
-                if ((remainingRecords>0) && (remainingRecords != mapKeys.length)) {
+                if ((remainingRecords>0) && (remainingRecords != mapKeys.length) && mapKeys.length != 0) {
+                    
                     // Resubmit the Map/Reduce script if more records are found
                     var scriptTask = task.create({
                         taskType: task.TaskType.MAP_REDUCE,
