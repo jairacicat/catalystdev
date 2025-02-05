@@ -33,7 +33,7 @@ define(['N/record', 'N/https', 'N/search', 'N/url'],
 
         function afterSubmit(context) {
             try {
-                if(context.type = context.UserEventType.CREATE){
+                if(context.type = context.UserEventType.CREATE || context.type == context.UserEventType.EDIT){
                     let newRecord = context.newRecord;
 
                     let soRec = record.load({
@@ -45,23 +45,17 @@ define(['N/record', 'N/https', 'N/search', 'N/url'],
                     let opportunityId = soRec.getValue({ fieldId: FLD_OPPORTUNITY_ID});
                     let soId = newRecord.id;
 
-                    let projectId = search.lookupFields({
-                        type: search.Type.CUSTOMER,
-                        id: customerId,
-                        columns: [FLD_JIRA_PROJECT_ID]
-                    })[FLD_JIRA_PROJECT_ID];
-
                     let scriptURL = url.resolveScript({
                         deploymentId: SL_SCRIPT_DEPLOYMENT,
                         scriptId: SL_SCRIPT_ID,
                         params: {
                             'customerId' : customerId,
                             'opportunityId' : opportunityId,
-                            'jiraprojectId' : projectId,
                             'soId' : soId
                         },
-                        returnExternalUrl: false
+                        returnExternalUrl: true
                     });
+                    log.debug("scriptURL", scriptURL);
 
                     let responseBody = https.post({
                         url: scriptURL,
