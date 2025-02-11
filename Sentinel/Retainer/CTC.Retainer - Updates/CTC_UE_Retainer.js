@@ -97,7 +97,7 @@ define(['N/record', 'N/search', 'N/log', 'SuiteScripts/CTC.Sentinel/CTC.SS2/CTC.
                 });
 
                 var retainerBudgetCalc = rtnrutil.getTotalParentRetainer(retainerId, customerId, beginningTransaction);
-                if(retainerBudget != retainerBudgetCalc){
+                /*if(retainerBudget != retainerBudgetCalc){
                     current_rec.setValue({
                         fieldId: 'custrecord_ctc_rtnr_total_budget',
                         value: retainerBudgetCalc || 0
@@ -109,6 +109,7 @@ define(['N/record', 'N/search', 'N/log', 'SuiteScripts/CTC.Sentinel/CTC.SS2/CTC.
                         retainerBudget = retainerBudget + beginningBalance || 0;
                     }
                 }
+                */
                 
 
                 var retainerBudgAdj = current_rec.getValue({
@@ -136,13 +137,13 @@ define(['N/record', 'N/search', 'N/log', 'SuiteScripts/CTC.Sentinel/CTC.SS2/CTC.
                 var retainerBilledCalc = rtnrutil.getRetainerTotalBilled(retainerId, customerId);
                 log.debug("RETAINER BILLED CALC", retainerBilledCalc);
 
-                if(retainerBilled != retainerBilledCalc){
+                if(retainerBilled != -retainerBilledCalc){
                     current_rec.setValue({
                         fieldId: 'custrecord_ctc_rtnr_total_billed',
-                        value: retainerBilledCalc
+                        value: -retainerBilledCalc
                     });
 
-                    retainerBilled = retainerBilledCalc;
+                    retainerBilled = Math.abs(retainerBilledCalc);
                 }
                 var retainerRemaining = current_rec.getValue({
                     fieldId: 'custrecord_ctc_rtnr_total_bgt_remaining'

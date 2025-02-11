@@ -33,26 +33,17 @@ define(['N/record', 'N/https', 'N/search', 'N/url'],
 
         function afterSubmit(context) {
             try {
-                if(context.type = context.UserEventType.CREATE || context.type == context.UserEventType.EDIT){
+                if(context.type = context.UserEventType.CREATE){
                     let newRecord = context.newRecord;
 
-                    let soRec = record.load({
-                        type: record.Type.SALES_ORDER,
-                        id: newRecord.id
-                    });
-
-                    let customerId = soRec.getValue({ fieldId: 'entity'});
-                    let opportunityId = soRec.getValue({ fieldId: FLD_OPPORTUNITY_ID});
-                    let soId = newRecord.id;
-
+                    let paramsObj =  {
+                        'soId' : newRecord.id
+                    }
+                   
                     let scriptURL = url.resolveScript({
                         deploymentId: SL_SCRIPT_DEPLOYMENT,
                         scriptId: SL_SCRIPT_ID,
-                        params: {
-                            'customerId' : customerId,
-                            'opportunityId' : opportunityId,
-                            'soId' : soId
-                        },
+                        params: paramsObj,
                         returnExternalUrl: true
                     });
                     log.debug("scriptURL", scriptURL);

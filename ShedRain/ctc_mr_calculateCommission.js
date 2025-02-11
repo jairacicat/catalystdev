@@ -359,7 +359,7 @@
             if (criteria.item && criteria.item === result.getValue('custrecord_ctc_comm_plan_item')) score++;
 
             // Check if this result has a higher score than the current best match
-            if (score > highestScore) {
+            if (score >= highestScore) {
                 highestScore = score;
                 bestMatch = {
                     id: result.id,
