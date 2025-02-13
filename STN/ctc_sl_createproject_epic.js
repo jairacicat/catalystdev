@@ -46,7 +46,6 @@ define(['N/record', 'N/https', 'N/search','./utils/ctc_CommonUtils.js',  './lib/
                 log.debug("PARAMETERS", PARAMETERS);
 
                 let soId = PARAMETERS.soId;
-
                 let soRec = record.load({
                     type: record.Type.SALES_ORDER,
                     id: soId
@@ -118,6 +117,31 @@ define(['N/record', 'N/https', 'N/search','./utils/ctc_CommonUtils.js',  './lib/
                             //Attach SO PDF to Jira Epic:
                             attachWeblinkToEpic(headersObj, jiraEpicId.id, paramFields)
                             
+                            //Create Project Tasks
+                            for(var i = 0; i < tempItems.length; i++){
+                                let projectTask = record.create({
+                                    type: record.Type.PROJECT_TASK,
+                                });
+
+                                projectTask.setValue({
+                                    fieldId: 'title',
+                                    value: opportunityId + " - " + tempItems[i].name
+                                });
+
+                                projectTask.setValue({
+                                    fieldId: 'company',
+                                    value: projectId
+                                });
+
+                                projectTask.setValue({
+                                    fieldId: 'plannedwork',
+                                    value: 1
+                                });
+
+                                let projectTaskId = projectTask.save({ignoreMandatoryFields: true});
+                                log.debug("Project Task Created", projectTaskId);
+                            }
+                          
                             return true;
                         
                         }
@@ -139,7 +163,35 @@ define(['N/record', 'N/https', 'N/search','./utils/ctc_CommonUtils.js',  './lib/
                         
                             if(jiraEpicId.id != null){
                                 //Attach SO PDF to Jira Epic:
-                                attachWeblinkToEpic(headersObj, jiraEpicId.id, paramFields)
+                                attachWeblinkToEpic(headersObj, jiraEpicId.id, paramFields);
+
+                                /*
+                                 //Create Project Tasks
+                                for(var i = 0; i < tempItems.length; i++){
+                                    let projectTask = record.create({
+                                        type: record.Type.PROJECT_TASK,
+                                    });
+
+                                    projectTask.setValue({
+                                        fieldId: 'title',
+                                        value: opportunityId + " - " + tempItems[i].name
+                                    });
+
+                                    projectTask.setValue({
+                                        fieldId: 'company',
+                                        value: projectId
+                                    });
+
+                                    projectTask.setValue({
+                                        fieldId: 'plannedwork',
+                                        value: 1
+                                    });
+
+                                    let projectTaskId = projectTask.save({ignoreMandatoryFields: true});
+                                    log.debug("Project Task Created", projectTaskId);
+                                }
+                          
+                                */
                                 return true;
                             }
                             else{
@@ -252,13 +304,43 @@ define(['N/record', 'N/https', 'N/search','./utils/ctc_CommonUtils.js',  './lib/
                     }
 
                     let childPayload = createIssuePayload(childPayloadObject, true, jiraEpicId);
-                    let responseBody = https.post({
+                    let childResponseBody = https.post({
                         url: endpoint,
                         body: JSON.stringify(childPayload),
                         headers: headers
                     });
         
-                    log.debug("Creation of Child Jira Epic response", responseBody);
+                    log.debug("Creation of Child Jira Epic response", childResponseBody);
+
+                    let childResponse = JSON.parse(childResponseBody.body);
+                    let childJiraKey = childResponse.key;
+                   
+                    let projectTask = record.create({
+                        type: record.Type.PROJECT_TASK,
+                    });
+
+                    projectTask.setValue({
+                        fieldId: 'title',
+                        value: paramFields.opportunityId + " - " + soItems[i].name
+                    });
+
+                    projectTask.setValue({
+                        fieldId: 'company',
+                        value: nsProjectId
+                    });
+
+                    projectTask.setValue({
+                        fieldId: 'plannedwork',
+                        value: 1
+                    });
+
+                    projectTask.setValue({
+                        fieldId: 'custevent_ctc_jira_issue_key',
+                        value: childJiraKey
+                    });
+
+                    let projectTaskId = projectTask.save({ignoreMandatoryFields: true});
+                    log.debug("Project Task Created", projectTaskId);
                 }
 
                 return {

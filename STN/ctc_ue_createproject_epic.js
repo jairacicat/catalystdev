@@ -31,6 +31,8 @@ define(['N/record', 'N/https', 'N/search', 'N/url'],
         const SL_SCRIPT_ID = 'customscript_ctc_sl_createprojectepic';
         const SL_SCRIPT_DEPLOYMENT = 'customdeploy_ctc_sl_createprojectepic';
 
+        const FLD_CREATE_JIRA = 'custbody_ctc_sfdc_createprojinjira';
+
         function afterSubmit(context) {
             try {
                 if(context.type = context.UserEventType.CREATE){
@@ -39,21 +41,29 @@ define(['N/record', 'N/https', 'N/search', 'N/url'],
                     let paramsObj =  {
                         'soId' : newRecord.id
                     }
-                   
-                    let scriptURL = url.resolveScript({
-                        deploymentId: SL_SCRIPT_DEPLOYMENT,
-                        scriptId: SL_SCRIPT_ID,
-                        params: paramsObj,
-                        returnExternalUrl: true
-                    });
-                    log.debug("scriptURL", scriptURL);
 
-                    let responseBody = https.post({
-                        url: scriptURL,
-                        body: 'OUTBOUND'
+                    let createJiraProject = newRecord.getValue({
+                        fieldId: FLD_CREATE_JIRA
                     });
 
-                    log.debug("responseBody", responseBody);
+                    log.debug("Create Jira Project Flag", createJiraProject);
+
+                    if(createJiraProject || createJiraProject == 'T'){
+                        let scriptURL = url.resolveScript({
+                            deploymentId: SL_SCRIPT_DEPLOYMENT,
+                            scriptId: SL_SCRIPT_ID,
+                            params: paramsObj,
+                            returnExternalUrl: true
+                        });
+                        log.debug("scriptURL", scriptURL);
+    
+                        let responseBody = https.post({
+                            url: scriptURL,
+                            body: 'OUTBOUND'
+                        });
+    
+                        log.debug("responseBody", responseBody);
+                    }
                 }
             } catch (o_exception) {
                 log.debug('catch', 'o_exception= ' + o_exception);
