@@ -35,7 +35,7 @@ define(['N/record', 'N/https', 'N/search', 'N/url'],
 
         function afterSubmit(context) {
             try {
-                if(context.type = context.UserEventType.CREATE){
+                if(context.type == context.UserEventType.CREATE){
                     let newRecord = context.newRecord;
 
                     let paramsObj =  {

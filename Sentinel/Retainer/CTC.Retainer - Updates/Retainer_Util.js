@@ -183,13 +183,16 @@ define(['N/record', 'N/search', 'N/log', 'N/currentRecord'],
             });
 
             log.debug(stLogTitle, currIndex + ' | itemId:' + itemId);
-
-            if (retainerItemList.indexOf((parseInt(itemId)))) { // 5414 = Retainer - Updated item
+            log.debug(stLogTitle, 'retainerItemList: ' + retainerItemList.indexOf(parseInt(itemId)));
+            if (retainerItemList.indexOf(parseInt(itemId)) > -1) { // 5414 = Retainer - Updated item
+                log.debug(stLogTitle, "Inside if statement")
                 var retainerObj;
                 var itemAmount = current_rec.getCurrentSublistValue({
                     sublistId: 'item',
                     fieldId: 'amount'
                 });
+
+              
 
                 //Load retainer record and get balance
                 retainerObj = search.lookupFields({
@@ -229,6 +232,7 @@ define(['N/record', 'N/search', 'N/log', 'N/currentRecord'],
                 log.debug(stLogTitle, itemAmount + ' | ' + retainerBalance);
 
                 alert(alertmesg);
+                
 
                 if (isEmpty(retainerBalance)) {
                     current_rec.cancelLine({
@@ -254,11 +258,21 @@ define(['N/record', 'N/search', 'N/log', 'N/currentRecord'],
                         sublistId: 'item'
                     });
                     retainerItemAmount = itemAmount;
+
+                 
                     return true;
                 } else {
                     retainerItemAmount = itemAmount;
+                    current_rec.setValue({
+                        fieldId: 'custbody_ctc_ret_trans_amount',
+                        value: retainerItemAmount,
+                        ignoreFieldChange: true
+                    })
+                    
                     return true;
                 }
+
+            
 
             } // if retainer item
             return true;

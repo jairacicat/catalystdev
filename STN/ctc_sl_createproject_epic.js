@@ -72,8 +72,13 @@ define(['N/record', 'N/https', 'N/search','./utils/ctc_CommonUtils.js',  './lib/
 
                     tempItems.push(tempObject);
                 }
+                log.debug("Temp Items", tempItems);
 
                 let projectId = soRec.getValue({
+                    fieldId: 'job'
+                });
+
+                let projectName = soRec.getText({
                     fieldId: 'job'
                 });
 
@@ -84,13 +89,15 @@ define(['N/record', 'N/https', 'N/search','./utils/ctc_CommonUtils.js',  './lib/
                 let opportunityId = soRec.getValue({
                     fieldId: 'custbody_ctc_opportunityid'
                 });
+                
 
                 let paramFields = {
                     "soId" : soId,
                     "customerId" : customerId,
                     "projectId" : projectId,
                     "opportunityId" : opportunityId,
-                    "items" : tempItems
+                    "items" : tempItems,
+                    "projectName" : projectName
                 }
 
                 log.debug("paramFields", paramFields);
@@ -116,32 +123,6 @@ define(['N/record', 'N/https', 'N/search','./utils/ctc_CommonUtils.js',  './lib/
                            
                             //Attach SO PDF to Jira Epic:
                             attachWeblinkToEpic(headersObj, jiraEpicId.id, paramFields)
-                            
-                            //Create Project Tasks
-                            for(var i = 0; i < tempItems.length; i++){
-                                let projectTask = record.create({
-                                    type: record.Type.PROJECT_TASK,
-                                });
-
-                                projectTask.setValue({
-                                    fieldId: 'title',
-                                    value: opportunityId + " - " + tempItems[i].name
-                                });
-
-                                projectTask.setValue({
-                                    fieldId: 'company',
-                                    value: projectId
-                                });
-
-                                projectTask.setValue({
-                                    fieldId: 'plannedwork',
-                                    value: 1
-                                });
-
-                                let projectTaskId = projectTask.save({ignoreMandatoryFields: true});
-                                log.debug("Project Task Created", projectTaskId);
-                            }
-                          
                             return true;
                         
                         }
@@ -164,34 +145,6 @@ define(['N/record', 'N/https', 'N/search','./utils/ctc_CommonUtils.js',  './lib/
                             if(jiraEpicId.id != null){
                                 //Attach SO PDF to Jira Epic:
                                 attachWeblinkToEpic(headersObj, jiraEpicId.id, paramFields);
-
-                                /*
-                                 //Create Project Tasks
-                                for(var i = 0; i < tempItems.length; i++){
-                                    let projectTask = record.create({
-                                        type: record.Type.PROJECT_TASK,
-                                    });
-
-                                    projectTask.setValue({
-                                        fieldId: 'title',
-                                        value: opportunityId + " - " + tempItems[i].name
-                                    });
-
-                                    projectTask.setValue({
-                                        fieldId: 'company',
-                                        value: projectId
-                                    });
-
-                                    projectTask.setValue({
-                                        fieldId: 'plannedwork',
-                                        value: 1
-                                    });
-
-                                    let projectTaskId = projectTask.save({ignoreMandatoryFields: true});
-                                    log.debug("Project Task Created", projectTaskId);
-                                }
-                          
-                                */
                                 return true;
                             }
                             else{
@@ -258,7 +211,7 @@ define(['N/record', 'N/https', 'N/search','./utils/ctc_CommonUtils.js',  './lib/
         function createJiraEpic(headers, jiraProjectId, paramFields, nsProjectId){
             let payloadObject = {
                 contentText : paramFields.opportunityId,
-                summaryText: paramFields.opportunityId,
+                summaryText: paramFields.projectName,
                 projectName: jiraProjectId
             }
 
@@ -296,10 +249,11 @@ define(['N/record', 'N/https', 'N/search','./utils/ctc_CommonUtils.js',  './lib/
 
                 //Get items from parameters and create Jira Child Issues
                 let soItems = paramFields.items;
+                log.debug("SO ITEMS", soItems)
                 for(var i = 0; i < soItems.length; i++){
                     let childPayloadObject = {
                         contentText : soItems[i].description,
-                        summaryText: paramFields.opportunityId + " - " + soItems[i].name,
+                        summaryText: paramFields.projectName + " - " + soItems[i].name,
                         projectName: jiraProjectId
                     }
 

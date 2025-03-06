@@ -26,6 +26,11 @@ define(['N/record', 'N/search'],
     function(record, search) {
         const FLD_READYFORFULFILLMENT = 'custbody_mhi_ready_for_fulfillment';
 
+        const FLD_TRX_VERTEXCUSTOMERID = 'custbody_customerid_vt';
+        const FLD_ENT_VERTEXCUSTOMERID = 'custentity_externalid_vt';
+        const FLD_ITEM_PRODUCTCLASS = 'custitem_taxproductclass_vt';
+        const FLD_TRX_PRODUCTCLASS = 'custcol_taxproductclass_vt';
+
         function beforeLoad(context) {
             try {
                 if(context.type == context.UserEventType.COPY){
@@ -37,19 +42,19 @@ define(['N/record', 'N/search'],
                     let customerLookup = search.lookupFields({
                         type: search.Type.CUSTOMER,
                         id: customerId,
-                        columns: ['taxitem', 'shipcountry']
+                        columns: ['taxitem', 'shipcountry', FLD_ENT_VERTEXCUSTOMERID]
                     });
 
                     let taxCode = customerLookup.taxitem[0].value || customerLookup.taxitem;
                     log.debug("Tax Item", taxCode);
 
-                    let customerShipCountry
+                    let customerShipCountry;
                     if(taxCode){
                         customerShipCountry = search.lookupFields({
                             type: 'salestaxitem',
                             id: taxCode,
                             columns: 'country'
-                        }).country;
+                        }).country[0].value;
                     }
                    
                     let transactionShipCountry = REC.getValue({fieldId: 'shipcountry'});
@@ -61,11 +66,22 @@ define(['N/record', 'N/search'],
                     }
 
                     //Set the Tax Code on lines
-                    let itemCount = REC.getLineCount({sublistId: 'items'});
-
                     var lineCount = REC.getLineCount({ sublistId: 'item' });
-
+                    let itemIds = [];
                     for (var i = 0; i < lineCount; i++) {
+                        let itemId = REC.getSublistValue({
+                            sublistId: 'item',
+                            fieldId: 'item',
+                            line: i
+                        });
+
+                        itemIds.push(itemId);
+                    }
+
+                    //Search and get Vertex product class of items:
+                    let itemProductClass = getItemProductClass(itemIds);
+
+                    for (var i = 0; i < lineCount; i++){
                         REC.setSublistValue({
                             sublistId: 'item',
                             fieldId: 'taxcode',
@@ -77,8 +93,34 @@ define(['N/record', 'N/search'],
                             title: 'Tax Code set',
                             details: 'Line ' + (i + 1) + ' Tax Code re-set to: ' + taxCode
                         });
+
+                        let itemId = REC.getSublistValue({
+                            sublistId: 'item',
+                            fieldId: 'item',
+                            line: i
+                        });
+
+                        REC.setSublistValue({
+                            sublistId: 'item',
+                            fieldId: FLD_TRX_PRODUCTCLASS,
+                            value: itemProductClass[itemId],
+                            line: i
+                        });
                     }
                   
+                    //NS-93: BR3 The Vertex Customer ID should be "refreshed" from the account, in the event that the certificate had expired or a missing certificate was added
+                    let vertexCustomerId = REC.getValue({
+                        fieldId: FLD_TRX_VERTEXCUSTOMERID
+                    });
+
+                    let customerVertexCustomerId = customerLookup[FLD_ENT_VERTEXCUSTOMERID];
+                    log.debug("customerVertexCustomerId", customerVertexCustomerId);
+                    if(customerVertexCustomerId && (vertexCustomerId != customerVertexCustomerId)){
+                        REC.setValue({
+                            fieldId: FLD_TRX_VERTEXCUSTOMERID,
+                            value: customerVertexCustomerId
+                        });
+                    }
 
                     //NS-204: Reset Ready for Fulfillment checkbox:
                     REC.setValue({
@@ -93,24 +135,35 @@ define(['N/record', 'N/search'],
             }
         }
 
-        function beforeSubmit(context) {
-            try {
+        function getItemProductClass(itemIds){
+            // Create the saved search
+            var itemSearch = search.create({
+                type: search.Type.ITEM,
+                filters: [
+                    ['internalid', 'anyof', itemIds]
+                ],
+                columns: [
+                    search.createColumn({ name: 'internalid' }),
+                    search.createColumn({ name: FLD_ITEM_PRODUCTCLASS }) 
+                ]
+            });
 
-            } catch (o_exception) {
-                log.debug('catch', 'o_exception= ' + o_exception);
-            }
+            // Run the search
+            var searchResult = itemSearch.run();
+            var results = {};
+            searchResult.each(function(result) {
+                var itemId = result.getValue({ name: 'internalid' });
+                results[itemId] = result.getValue({ name: FLD_ITEM_PRODUCTCLASS })
+
+            });
+
+            // Log the results
+            log.debug('Search Results', JSON.stringify(results));
+
+            return results;
         }
 
-        function afterSubmit(context) {
-            try {
-
-            } catch (o_exception) {
-                log.debug('catch', 'o_exception= ' + o_exception);
-            }
-        }
         return {
-            beforeLoad: beforeLoad,
-            // beforeSubmit: beforeSubmit,
-            // afterSubmit: afterSubmit
+            beforeLoad: beforeLoad
         };
     });

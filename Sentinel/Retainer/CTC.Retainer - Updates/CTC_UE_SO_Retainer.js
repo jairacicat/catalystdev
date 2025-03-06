@@ -150,7 +150,7 @@ define(['N/record', 'N/search', 'N/log', 'N/runtime', 'N/ui/serverWidget', 'Suit
 
                     var itemAmount = current_rec.getCurrentSublistValue({
                         sublistId: 'item',
-                        fieldId: 'amount'
+                        fieldId: 'amousnt'
                     });
                     log.debug(stLogTitle, i + ' |retainerAmount: ' + retainerAmount + ' | itemAmount:' + itemAmount);
 

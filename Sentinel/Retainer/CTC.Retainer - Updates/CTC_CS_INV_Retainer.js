@@ -259,6 +259,7 @@ define(['N/currentRecord', 'N/log', 'N/search', 'SuiteScripts/CTC.Sentinel/CTC.S
             if (current_sublist === 'item' && isRetainerReference === false && !rtnrutil.isEmpty(retainerId)) {
                 var validateChildStat = rtnrutil.validateChildRetainerItem(current_rec, retainerId, retainerName);
                 log.debug(stLogTitle, 'validateChildStat:' + validateChildStat);
+
                 return validateChildStat;
             }
 
@@ -338,6 +339,7 @@ define(['N/currentRecord', 'N/log', 'N/search', 'SuiteScripts/CTC.Sentinel/CTC.S
             });
 
             log.debug(stLogTitle, 'itemCount: ' + itemCount + ' |retainerId:' + retainerId);
+            var retainerAmount = 0;
 
             for (var i = 0; i <= itemCount - 1; i++) {
 
@@ -358,6 +360,7 @@ define(['N/currentRecord', 'N/log', 'N/search', 'SuiteScripts/CTC.Sentinel/CTC.S
                 if (rtnrutil.fields.retainerItemList.indexOf(parseInt(itemId)) > -1) {
                 //if (itemId === rtnrutil.fields.retainerItemId || itemId === rtnrutil.fields.retainerItemId_ir || itemId === rtnrutil.fields.retainerItemId_advisory || itemId === rtnrutil.fields.retainerFortisIr || itemId === rtnrutil.fields.retainerFortisVciso) {
                     retainerItemFound = true;
+                    retainerAmount = rate;
                 }
 
                 rate = Math.abs(rate);
@@ -371,6 +374,10 @@ define(['N/currentRecord', 'N/log', 'N/search', 'SuiteScripts/CTC.Sentinel/CTC.S
                     return false;
 
                 } else {
+                    current_rec.setValue({
+                        fieldId: 'custbody_ctc_ret_trans_amount',
+                        value: retainerAmount
+                    });
                     return true;
                 }
             }

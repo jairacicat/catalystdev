@@ -279,6 +279,13 @@
             </#if>
             <#assign ctr = ctr + 1>
         </#list>
+        <#if ds.retainer.adjustment?has_content>
+            <tr>
+                    <td colspan="7"  style="text-align: left;"></td>
+                    <td colspan="16" style="text-align: left;">Adjustment</td>
+                    <td colspan="5" style="text-align: right;">${nsformat_currency(ds.retainer.adjustment)}</td>
+            </tr>
+        </#if>
     <#else>
     <tr>
         <!--td colspan="7"  style="text-align: left;">NO INVOICE TRANSACTION FOUND</td-->
@@ -315,8 +322,8 @@
     <td colspan="7" style="text-align: left;"><b>RETAINER BALANCE AT</b></td>
     <td colspan="16"  style="text-align: left;"><b>${ds.today}</b></td>
     <td colspan="5" style="text-align: right;"><b>
-        <#if ds.retainer.budgetRemaining?has_content>
-            ${nsformat_currency(ds.retainer.budgetRemaining)}
+        <#if ds.retainer.retainerBalance?has_content>
+            ${nsformat_currency(ds.retainer.retainerBalance)}
         <#else>
             <em>0.00</em>
         </#if></b>

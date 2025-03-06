@@ -425,15 +425,6 @@ define(['N/ui/serverWidget', 'N/search', 'N/url', 'N/redirect', 'N/runtime', 'N/
             }
 
 
-
-            //Call Map/Reduce if it's not yet running:
-            try{
-
-            }
-            catch(e){
-                log.error("Map/Reduce already running", e.message);
-            }
-
             context.response.writePage(form);
         }
 
